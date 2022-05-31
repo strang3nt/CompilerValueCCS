@@ -7,6 +7,7 @@ import cats.parse.Parser.string
 
 object ValueCCSParser {
 
+    import main.scala.ast.CommonAst._
     import main.scala.ast.ValueCCSAst._
     import Aexpr._
     import Bexpr._
