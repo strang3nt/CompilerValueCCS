@@ -1,4 +1,4 @@
-package main.scala.valueccsparser
+package main.scala.parser
 
 import cats.parse.{Parser0, Parser, Numbers}
 import cats.parse.Rfc5234._
@@ -7,19 +7,19 @@ import cats.parse.Parser.string
 
 object ValueCCSParser {
 
-    import grammar._
+    import main.scala.ast.ValueCCSAst._
     import Aexpr._
     import Bexpr._
-    import ValueCCSProcess._
+    import ValueCCS._
     import ExprOperator._
     import BoolOperator._
     import Natural._
 
-    def parse(input : String): Either[Parser.Error, ValueCCSProcess] =
+    def parse(input : String): Either[Parser.Error, ValueCCS] =
       input.filterNot(_.isWhitespace)
       parser.parse(input).map(_._2)
 
-    private[this] val parser : Parser[ValueCCSProcess] =
+    private[this] val parser : Parser[ValueCCS] =
       
       val separator: Parser[Unit] = Parser.char('.').void
       val lowerCaseString = Parser.charWhere(c => (c.isLower && c.isLetter)).rep.string
@@ -75,30 +75,30 @@ object ValueCCSParser {
         .map{case (name, list) => Constant (name, list.map { _.toList })}
       
       lazy val inputCh = Parser
-        .defer((channel ~ ( Parser.char('(') *> variable <* Parser.char(')')).?) ~ (separator *> valueCCSProcess).?)
+        .defer((channel ~ ( Parser.char('(') *> variable <* Parser.char(')')).?) ~ (separator *> valueCCS).?)
         .map{case ((ch, v), proc) => InputCh (ch, v, proc)}
       
       lazy val outputCh = Parser
-        .defer((Parser.char('\'') *> channel) ~ (Parser.char('(') *> aexpr <* Parser.char(')')).? ~ (separator *> valueCCSProcess).?)
+        .defer((Parser.char('\'') *> channel) ~ (Parser.char('(') *> aexpr <* Parser.char(')')).? ~ (separator *> valueCCS).?)
         .map { case ((ch, v), proc) => OutputCh (ch, v, proc) }
       
       lazy val ifThen = Parser
-        .defer(((Parser.string("if") ~ Parser.char('(')) *> bexpr <* Parser.char(')')) ~ (Parser.string("then") *> valueCCSProcess))
+        .defer(((Parser.string("if") ~ Parser.char('(')) *> bexpr <* Parser.char(')')) ~ (Parser.string("then") *> valueCCS))
         .map(IfThen (_, _))
       
       lazy val par = Parser
-        .defer(valueCCSProcess ~ (Parser.char('|').void *> valueCCSProcess))
+        .defer(valueCCS ~ (Parser.char('|').void *> valueCCS))
         .map(Par(_, _))
       
       lazy val sum = Parser
-        .defer((valueCCSProcess.repSep(Parser.char('+'))))
+        .defer((valueCCS.repSep(Parser.char('+'))))
         .map{ x => Sum (x.toList) }
       
       lazy val restrict = Parser
-        .defer(valueCCSProcess ~ ((Parser.char('\\') ~ Parser.char('{')) *> channel.repSep(Parser.char(',')) <* Parser.char('}')))
+        .defer(valueCCS ~ ((Parser.char('\\') ~ Parser.char('{')) *> channel.repSep(Parser.char(',')) <* Parser.char('}')))
         .map{case (proc, chs) => Restrict (proc, chs.toList)}
 
-      lazy val valueCCSProcess: Parser[ValueCCSProcess] = Parser.oneOf(
+      lazy val valueCCS: Parser[ValueCCS] = Parser.oneOf(
         constant :: 
         inputCh :: 
         outputCh :: 
@@ -109,6 +109,6 @@ object ValueCCSParser {
         Nil
       )
 
-      valueCCSProcess
+      valueCCS
 
 }

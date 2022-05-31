@@ -1,11 +1,10 @@
 package main.scala
 
-import main.scala.valueccsparser.ValueCCSParser._
-import main.scala.valueccsparser.grammar._
-import main.scala.valueccsparser.grammar.Aexpr._
-import main.scala.valueccsparser.grammar.Natural._
-import main.scala.valueccsparser.grammar.ExprOperator._
-import main.scala.valueccsparser.grammar.Variable
+import main.scala.parser.ValueCCSParser._
+import main.scala.ast.ValueCCSAst._
+import Aexpr._
+import Natural._
+import ExprOperator._
 
 object Main extends App {
   println(parse("Porta(1,2,3,4)"))

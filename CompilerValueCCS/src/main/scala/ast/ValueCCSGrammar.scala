@@ -1,6 +1,8 @@
-package main.scala.valueccsparser
+package main.scala.ast
 
-object grammar:
+import CommonAst._
+
+object ValueCCSAst:
 
   final case class Variable(name : String):
     override def toString() = name
@@ -21,9 +23,6 @@ object grammar:
     case Three
     case Four
     case Five
-
-  final case class Channel (name : String):
-    override def toString() = name
 
   enum BoolOperator:
 
@@ -91,7 +90,7 @@ object grammar:
     case BoolBinOp (left : Bexpr, op : BoolOperator, right : Bexpr)
     case ExprBinOp (left : Aexpr, op : BoolOperator, right : Aexpr)
 
-  enum ValueCCSProcess:
+  enum ValueCCS:
 
     override def toString() =
       this match {
@@ -105,9 +104,9 @@ object grammar:
       }    
 
     case Constant (name : String, l : Option[List[Aexpr]])
-    case InputCh (c : Channel, v : Option[Variable], p : Option[ValueCCSProcess])
-    case OutputCh (c : Channel, e : Option[Aexpr], p : Option[ValueCCSProcess])
-    case IfThen (b : Bexpr, p : ValueCCSProcess)
-    case Par(left: ValueCCSProcess, right : ValueCCSProcess)
-    case Sum(l : List[ValueCCSProcess])
-    case Restrict(p : ValueCCSProcess, l : List[Channel])
+    case InputCh (c : Channel, v : Option[Variable], p : Option[ValueCCS])
+    case OutputCh (c : Channel, e : Option[Aexpr], p : Option[ValueCCS])
+    case IfThen (b : Bexpr, p : ValueCCS)
+    case Par(left: ValueCCS, right : ValueCCS)
+    case Sum(l : List[ValueCCS])
+    case Restrict(p : ValueCCS, l : List[Channel])
