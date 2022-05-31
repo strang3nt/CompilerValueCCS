@@ -11,27 +11,51 @@ object ValueCCSParser {
     import Aexpr._
     import Bexpr._
     import ValueCCSProcess._
+    import ExprOperator._
+    import BoolOperator._
+    import Natural._
 
-    def parse(input : String): Either[Parser.Error, ValueCCSProcess] = 
+    def parse(input : String): Either[Parser.Error, ValueCCSProcess] =
+      input.filterNot(_.isWhitespace)
       parser.parse(input).map(_._2)
-
-    // auxiliary parsers
-    private[this] val whitespace: Parser[Unit] = Parser.charIn(" \t\r\n").void
-    private[this] val whitespaces0: Parser0[Unit] = whitespace.rep0.void
-    private[this] val separator: Parser[Unit] = Parser.char('.').soft.surroundedBy(whitespaces0).void
-    
-    def rep[A](pa: Parser[A]): Parser0[List[A]] = pa.repSep0(separator).surroundedBy(whitespaces0)
 
     private[this] val parser : Parser[ValueCCSProcess] =
       
+      val separator: Parser[Unit] = Parser.char('.').void
       val lowerCaseString = Parser.charWhere(c => (c.isLower && c.isLetter)).rep.string
+      
       val variable = lowerCaseString map (Variable(_))
       val channel = lowerCaseString map (Channel(_))
-      val number = nonNegativeIntString.string.map{ x => Natural (x.toInt) } // TODO: enforce natural at grammar level
+      val number = Parser
+        .stringIn("1" :: "2" ::"3" :: "4" :: "5" :: Nil)
+        .map{ 
+          case "1" => One
+          case "2" => Two
+          case "3" => Three
+          case "4" => Four
+          case "5" => Five
+        }
 
-      // TODO: build operator type
-      val exprOperator : Parser[String] = Parser.stringIn(("+" :: "-" :: Nil))
-      val boolOperator : Parser[String] = Parser.stringIn(("&&" :: "||" :: "!" :: "=" :: "<" :: ">" :: Nil))
+      val exprOperator = Parser
+        .stringIn("\\" :: "*" :: "+" :: "-" :: Nil)
+        .map {
+          case "\\" => Div
+          case "*" => Mul
+          case "+" => Add
+          case "-" => Sub
+        }
+      val boolOperator = Parser
+        .stringIn(("&&" :: "||" :: "!" :: "==" :: "<" :: ">" :: "<=" :: ">=" :: Nil))
+        .map {
+          case "&&" => Land
+          case "||" => Lor
+          case "!" => Neq
+          case "<=" => Leq
+          case "==" => Eq
+          case "<" => Le
+          case ">" => Ge
+          case ">=" => Geq
+        }
 
       // AEXPR
       val num = number map (Num (_))
