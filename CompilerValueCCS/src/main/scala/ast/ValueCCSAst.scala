@@ -1,40 +1,35 @@
 package main.scala.ast
 
 import CommonAst._
+import Aexpr._
 
 object ValueCCSAst:
 
-  final case class Variable(name : String):
-    override def toString() = name
-  
-  enum Natural:
-
+  enum UnLogicOperator:
     override def toString() =
       this match {
-        case One => "1"
-        case Two => "2"
-        case Three => "3"
-        case Four => "4"
-        case Five => "5"
+        case _ => "!"
+      }
+    case Neq
+
+
+  enum LogicOperator:
+    override def toString() =
+      this match {
+        case Land => "&&"
+        case Lor => "||"
       }
 
-    case One
-    case Two
-    case Three
-    case Four
-    case Five
+    case Land
+    case Lor
 
   enum BoolOperator:
-
     override def toString() =
       this match {
         case Leq => "<="
         case Le => "<"
         case Geq => ">="
         case Ge => ">"
-        case Land => "&&"
-        case Lor => "||"
-        case Neq => "!"
         case Eq => "=="
       }
 
@@ -42,43 +37,9 @@ object ValueCCSAst:
     case Le
     case Geq
     case Ge
-    case Land
-    case Lor
-    case Neq
     case Eq
 
-  enum ExprOperator:
-    
-    override def toString() =
-      this match {
-        case Add => "+"
-        case Sub => "-"
-        case Mul => "*"
-        case Div => "\\"
-      }
-
-    case Add
-    case Sub
-    case Mul
-    case Div
-
-  enum Aexpr:
-
-    override def toString() =
-      this match {
-        case Var (v) => v.toString
-        case Num (n) => n.toString
-        case BinOp (left: (Num | Var), op, right: (Num | Var)) => left.toString ++ " " ++ op.toString ++ " " ++ right.toString
-        case BinOp (left, op, right) => 
-          "(" ++ left.toString ++ ")" ++ " " ++ op.toString ++ " " ++ "(" ++ right.toString ++ ")"
-      }
-      
-    case Var(v : Variable)
-    case Num (n : Natural)
-    case BinOp (left : Aexpr, op : ExprOperator, right : Aexpr)
-
   enum Bexpr:
-
     override def toString() =
       this match {
         case UnOp (op, right) => op.toString ++ right.toString
@@ -86,8 +47,8 @@ object ValueCCSAst:
         case ExprBinOp (left, op, right) => left.toString ++ " " ++ op.toString ++ " " ++ right.toString
       }
     
-    case UnOp (op : BoolOperator, right : Bexpr)
-    case BoolBinOp (left : Bexpr, op : BoolOperator, right : Bexpr)
+    case UnOp (op : UnLogicOperator, right : Bexpr)
+    case BoolBinOp (left : Bexpr, op : LogicOperator, right : Bexpr)
     case ExprBinOp (left : Aexpr, op : BoolOperator, right : Aexpr)
 
   enum ValueCCS:
