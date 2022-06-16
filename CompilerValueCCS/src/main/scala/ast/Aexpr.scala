@@ -1,16 +1,15 @@
 package main.scala.ast
 
 import CommonAst.Variable
+import main.scala.ast.Eval
+import main.scala.ast.ContainsVariable
+import main.scala.ast.ApplyOperator
+
 // EBNF (Extended Backus–Naur form):
 // expr -> term [ (‘+’ | ‘-’) term ]*
 // term -> factor [ (‘*’ | ‘/’) factor ]*
 // factor -> ‘(‘ expr ‘)’ | ID | NUMBER
 object Aexpr {
-
-  trait Eval:
-    def eval(): Option[Int]
-  trait ContainsVariable:
-    def containsVariable(): Boolean
 
   enum Natural:
 
@@ -29,8 +28,8 @@ object Aexpr {
     case Four
     case Five
 
-  sealed trait ExprOperator:
-    def applyOperator(x: Int, y: Int): Int =
+  sealed trait ExprOperator extends ApplyOperator[Int, Int]:
+    override def applyOperator(x: Int, y: Int): Int =
       this match
         case Add => x + y
         case Sub => x - y
@@ -45,11 +44,12 @@ object Aexpr {
   case object Div extends ExprOperator:
     override def toString: String = " \\ "
 
-  final case class Aexpr(e: Expr | Term | Factor) extends Eval:
+  final case class Aexpr(e: Expr | Term | Factor) extends Eval[Int], ContainsVariable:
     override def toString: String = this.e.toString
-    override def eval(): Option[Int] = this.e.eval()
+    override def eval: Option[Int] = this.e.eval
+    override def containsVariable: Boolean = this.e.containsVariable
 
-  enum Expr extends Eval, ContainsVariable:
+  enum Expr extends Eval[Int], ContainsVariable:
     case Summation(t: Term, ts: List[(Add.type | Sub.type, Term)])
 
     override def toString: String =
@@ -58,48 +58,49 @@ object Aexpr {
           t.toString
         case Summation(t, ts) =>
           t.toString + ts.map((o, t) => o.toString + t.toString).mkString
-    override def eval(): Option[Int] =
+    override def eval: Option[Int] =
       this match
-        case _ if this.containsVariable() =>
+        case _ if this.containsVariable =>
           None
         case Summation(t, ts) if ts.isEmpty =>
-          t.eval()
+          t.eval
         case Summation(t, ts) =>
-          ts.foldLeft(t.eval()){case(acc, (op, x)) => Some (op.applyOperator(acc.get, x.eval().get))}
+          ts.foldLeft(t.eval){case(acc, (op, x)) => Some (op.applyOperator(acc.get, x.eval.get))}
 
-    override def containsVariable(): Boolean =
+    override def containsVariable: Boolean =
       this match
         case Summation(t, ts) if ts.isEmpty =>
-          t.containsVariable()
+          t.containsVariable
         case Summation(t, ts) =>
-          t.containsVariable() || ts.exists((_, t) => t.containsVariable())
+          t.containsVariable || ts.exists((_, t) => t.containsVariable)
 
-  enum Term extends Eval, ContainsVariable:
+  enum Term extends Eval[Int], ContainsVariable:
     case Multiplication(f: Factor, fs: List[(Mul.type | Div.type, Factor)])
     
-    override def containsVariable(): Boolean =
+    override def containsVariable: Boolean =
       this match
         case Multiplication(f, fs) if fs.isEmpty =>
-          f.containsVariable()
+          f.containsVariable
         case Multiplication(f, fs) =>
-          f.containsVariable() || fs.exists((_, f) => f.containsVariable())
+          f.containsVariable || fs.exists((_, f) => f.containsVariable)
+
     override def toString: String =
       this match
         case Multiplication(f, fs) if fs.isEmpty =>
           f.toString
         case Multiplication(f, fs) =>
           f.toString + fs.map((o, f) => o.toString + f.toString).mkString
-    override def eval(): Option[Int] =
+    override def eval: Option[Int] =
       this match
-        case _ if this.containsVariable() =>
+        case _ if this.containsVariable =>
           None
         case Multiplication(f, fs) if fs.isEmpty =>
-          f.eval()
+          f.eval
         case Multiplication(f, fs) =>
-          fs.foldLeft(f.eval()){case(acc, (op, x)) => Some(op.applyOperator(acc.get, x.eval().get))}
+          fs.foldLeft(f.eval){case(acc, (op, x)) => Some(op.applyOperator(acc.get, x.eval.get))}
 
 
-  enum Factor extends Eval, ContainsVariable:
+  enum Factor extends Eval[Int], ContainsVariable:
     case Parenthesis(e: Expr)
     case NUMBER(n: Natural)
     case ID(v: Variable)
@@ -111,14 +112,14 @@ object Aexpr {
         case ID(v) => v.toString
       }
     
-    override def containsVariable(): Boolean =
+    override def containsVariable: Boolean =
       this match
         case ID(_) => true
         case _ => false
-    override def eval(): Option[Int] =
+    override def eval: Option[Int] =
       this match
         case ID(_) => None
         case NUMBER(n) => Some(n.toString.toInt)
-        case Parenthesis(e) => e.eval()
+        case Parenthesis(e) => e.eval
 
 }
