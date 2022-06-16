@@ -1,22 +1,26 @@
 package main.scala.parser
 
-import cats.parse.{Parser0, Parser, Numbers}
+import cats.parse.{Numbers, Parser, Parser0}
 import cats.parse.Rfc5234._
 import cats.parse.Numbers._
 import cats.parse.Parser.string
-
 import main.scala.ast.CommonAst._
 import main.scala.ast.ValueCCSAst._
-import main.scala.ast.Aexpr._
-import Factor._
-import Term._ 
-import Expr._
-import Bexpr._
-import ValueCCS._
-import BoolOperator._
-import Natural._
-import LogicOperator._
+
+import main.scala.ast.Bexpr._
 import UnLogicOperator._
+import LogicOperator._
+import BoolOperator._
+import Bexpr._
+import BoolTerm._
+
+import main.scala.ast.Aexpr._
+import Aexpr._
+import Factor._
+import Term._
+import Expr._
+import ValueCCS._
+import Natural._
 
 object ValueCCSParser:
 
@@ -27,7 +31,7 @@ object ValueCCSParser:
         .map(_._2)
 
     private val separator = Parser.char('.').void
-    private val lowerCaseString = Parser.charWhere(c => (c.isLower && c.isLetter)).rep.string
+    private val lowerCaseString = Parser.charWhere(c => c.isLower && c.isLetter).rep.string
     private val op = Parser.char('(')
     private val cp = Parser.char(')')
 
@@ -74,31 +78,38 @@ object ValueCCSParser:
         case ">=" => Geq
       }
 
-    // TODO: solve left recursion
+
     private[parser] val aexpr: Parser[Aexpr] =
-      lazy val parenthesis = (op.string ~ expr ~ cp.string).map{case((op, e), cp) => Parenthesis(op, e, cp)}
-      lazy val number_ = number.map {case(n) => NUMBER(n)}
-      lazy val id = variable.map {case(v) => ID(v)}
+      lazy val parenthesis = (op.string *> expr <* cp.string).map (Parenthesis(_))
+      lazy val number_ = number map (NUMBER(_))
+      lazy val id = variable map (ID(_))
       lazy val factor: Parser[Factor] = Parser.defer(parenthesis | number_ | id)
-      lazy val term: Parser[Term] = Parser
-        .defer((factor ~ (mulOrDiv ~ factor).rep.?))
+      lazy val term: Parser[Term] =
+        (factor ~ (mulOrDiv ~ factor).rep.?)
         .map { 
           case(f, Some(l)) => Multiplication(f, l.toList) 
           case(f, None) => Multiplication(f, List.empty)}
-      lazy val expr: Parser[Expr] = Parser
-        .defer((term ~ (addOrSub ~ term).rep.?))
+      lazy val expr: Parser[Expr] = 
+        (term ~ (addOrSub ~ term).rep.?)
         .map{ 
           case(t, Some (l)) => Summation(t, l.toList) 
           case(t, None) => Summation(t, List.empty)}
 
-      Parser.oneOf(expr.backtrack :: term.backtrack :: factor :: Nil).map{case(a: (Expr | Term | Factor)) => Aexpr(a)}
+      Parser.oneOf(expr.backtrack :: term.backtrack :: factor :: Nil).map{case a: (Expr | Term | Factor) => Aexpr(a)}
+
 
     private[parser] val bexpr: Parser[Bexpr] =
-      lazy val unOp = Parser defer (unLogicOperator ~ bexpr) map { case (s, b) => UnOp(s, b) }
-      lazy val boolBinOp = Parser defer (bexpr ~ logicOperator ~ bexpr) map { case((l, o), r) => BoolBinOp(l, o, r) }
-      lazy val exprBinOp = Parser.defer (aexpr ~ boolOperator ~ aexpr) map { case((l, o), r) => ExprBinOp(l, o, r) }
-      lazy val bexpr: Parser[Bexpr] = Parser defer ( exprBinOp.backtrack | boolBinOp.backtrack | unOp )
-      bexpr
+      lazy val parBoolOp: Parser[ParBoolOp] = (op.string *> boolBinOp <* cp.string).map(ParBoolOp(_))
+      lazy val boolExpr: Parser[BoolExpr] = exprBinOp.map(BoolExpr(_))
+      lazy val unOp: Parser[UnOp] = (unLogicOperator ~ boolBinOp).map((op, b) => UnOp(op, b))
+      lazy val boolTerm: Parser[BoolTerm] = parBoolOp | boolExpr | unOp
+      lazy val boolBinOp: Parser[BoolBinOp] = Parser
+        .defer(boolTerm ~ (logicOperator ~ boolTerm).rep.?)
+        .map {
+          case (b, Some(l)) => BoolBinOp(b, l.toList)
+          case (b, None) => BoolBinOp(b, List.empty)}
+      lazy val exprBinOp: Parser[ExprBinOp] = (this.aexpr ~ boolOperator ~ this.aexpr).map{case((l, o), r) => ExprBinOp(l, o, r)}
+      Parser.oneOf(boolBinOp.backtrack :: boolTerm.backtrack :: exprBinOp :: Nil).map{ case b: (BoolBinOp | BoolTerm | ExprBinOp) => Bexpr(b)}
     
 
     private[parser] val constant: Parser[Constant] =
@@ -118,7 +129,7 @@ object ValueCCSParser:
 
 
     private[parser] lazy val ifThen = Parser
-      .defer(((Parser.string("if") ~ op *> bexpr <* cp) ~ (Parser.string("then") *> valueCCS)))
+      .defer((Parser.string("if") ~ op *> bexpr <* cp) ~ (Parser.string("then") *> valueCCS))
       .map(IfThen (_, _))
 
 
@@ -128,7 +139,7 @@ object ValueCCSParser:
 
 
     private[parser] lazy val sum = Parser
-      .defer((valueCCS.repSep(Parser.char('+'))))
+      .defer(valueCCS.repSep(Parser.char('+')))
       .map{ x => Sum (x.toList) }
 
 

@@ -6,7 +6,7 @@ object PureCCSAst:
   
   enum PureCCS:
 
-    override def toString() =
+    override def toString: String =
       this match {
         case Constant (name) => name
         case InputCh (c, p) => c.toString ++ " . " ++ p.map{_.toString}.getOrElse("")

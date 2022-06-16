@@ -1,59 +1,15 @@
 package main.scala.ast
 
-import CommonAst._
-import Aexpr._
+import CommonAst.{ Channel, Variable }
+import Aexpr.Aexpr
+import Bexpr.Bexpr
 
 object ValueCCSAst:
 
-  enum UnLogicOperator:
-    override def toString() =
-      this match {
-        case _ => "!"
-      }
-    case Neq
-
-
-  enum LogicOperator:
-    override def toString() =
-      this match {
-        case Land => "&&"
-        case Lor => "||"
-      }
-
-    case Land
-    case Lor
-
-  enum BoolOperator:
-    override def toString() =
-      this match {
-        case Leq => "<="
-        case Le => "<"
-        case Geq => ">="
-        case Ge => ">"
-        case Eq => "=="
-      }
-
-    case Leq
-    case Le
-    case Geq
-    case Ge
-    case Eq
-
-  enum Bexpr:
-    override def toString() =
-      this match {
-        case UnOp (op, right) => op.toString ++ right.toString
-        case BoolBinOp (left, op, right) => "(" ++ left.toString ++ ")" ++ " " ++ op.toString ++ " " ++ "(" ++ right.toString ++ ")"
-        case ExprBinOp (left, op, right) => left.toString ++ " " ++ op.toString ++ " " ++ right.toString
-      }
-    
-    case UnOp (op : UnLogicOperator, right : Bexpr)
-    case BoolBinOp (left : Bexpr, op : LogicOperator, right : Bexpr)
-    case ExprBinOp (left : Aexpr, op : BoolOperator, right : Aexpr)
 
   enum ValueCCS:
 
-    override def toString() =
+    override def toString: String =
       this match {
         case Constant (name, l) => name ++ l.map {"(" ++ _.mkString(", ") ++ ")"}.getOrElse("")
         case InputCh (c, v, p) => c.toString ++ v.map{"(" ++ _.toString ++ ")"}.getOrElse("") ++ " . " ++ p.map{_.toString}.getOrElse("")
