@@ -33,6 +33,7 @@ object ValueCCSParser:
 
     private val variable = lowerCaseString map (Variable(_))
     private val channel = lowerCaseString map (Channel(_))
+    private val tau = Parser.string("tau") map (_ => Tau())
     private val number = Parser
       .stringIn("1" :: "2" ::"3" :: "4" :: "5" :: Nil)
       .map{ 
@@ -114,9 +115,14 @@ object ValueCCSParser:
         .map{case (name, list) => Constant (name, list.map { _.toList })}
 
 
-    private[parser] lazy val inputCh = Parser
-      .defer((channel ~ ( op *> variable <* cp).?) ~ (separator *> valueCCS).?)
-      .map{case ((ch, v), proc) => InputCh (ch, v, proc)}
+    private[parser] lazy val inputCh = 
+      val act: Parser[Tau | Channel] = (tau.backtrack | channel) map {
+        case Tau() => Tau()
+        case Channel(name) => Channel(name)
+      }
+      Parser
+        .defer((act ~ ( op *> variable <* cp).?) ~ (separator *> valueCCS).?)
+        .map{case ((ch, v), proc) => InputCh (ch, v, proc)}
 
 
     private[parser] lazy val outputCh = Parser
@@ -135,8 +141,8 @@ object ValueCCSParser:
 
 
     private[parser] lazy val sum = Parser
-      .defer(valueCCS.repSep(Parser.char('+')))
-      .map{ x => Sum (x.toList) }
+      .defer(
+        Parser.string("0").map(_ => Sum(List.empty)) | valueCCS.repSep(Parser.char('+')).map(l => Sum (l.toList)))
 
 
     private[parser] lazy val restrict = Parser

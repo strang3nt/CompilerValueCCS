@@ -14,11 +14,14 @@ object PureCCSAst:
         case Par(left, right) => left.toString ++ " | " ++ right.toString
         case Sum(l) => l.mkString(", ")
         case Restrict(p, l) => p.toString ++ " \\ " ++ " {" ++ l.mkString(", ") ++ "}"
+        case Redirection(p, cs) => p.toString + "{" + cs.map((n, o) => n.toString + "/" + o.toString).mkString(", ") + "}"
+
       }    
 
     case Constant (name : String)
-    case InputCh (c : Channel, p : Option[PureCCS])
-    case OutputCh (c : Channel, p : Option[PureCCS])
+    case InputCh (c : Channel | Tau, p : Option[PureCCS])
+    case OutputCh (c : Channel , p : Option[PureCCS])
     case Par(left: PureCCS, right : PureCCS)
     case Sum(l : List[PureCCS])
     case Restrict(p : PureCCS, l : List[Channel])
+    case Redirection(p: PureCCS, cs: List[(Channel, Channel)])
