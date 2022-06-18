@@ -2,7 +2,8 @@ package main.scala.parser
 
 import main.scala.parser.ValueCCSParser._
 import main.scala.ast.ValueCCSAst._
-import main.scala.eval.EvalAexpr._
+import main.scala.eval.EvalAexpr.{ eval => evalA }
+import main.scala.eval.EvalBexpr.{ eval => evalB }
 
 
 class ValueCCSParserSuite extends munit.FunSuite {
@@ -35,8 +36,12 @@ class ValueCCSParserSuite extends munit.FunSuite {
     }
 
     assertEquals(obtained1.toString, "5 < 4")
+
     assertEquals(obtained2.toString, "5 < 4 && 3 < 2")
+    assertEquals(evalB(obtained2), false)
+
     assertEquals(obtained3.toString, "!(5 < 4) && 3 < 2")
+    assertEquals(evalB(obtained3), false)
 
     //assertEquals(obtained.eval(), Some(7))
   }

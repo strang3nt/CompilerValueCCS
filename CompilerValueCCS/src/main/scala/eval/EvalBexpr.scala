@@ -8,12 +8,11 @@ object EvalBexpr {
   def eval(b: Bexpr): Boolean =
     b match
       case BoolBinOp(left, rest) =>
-        if rest.isEmpty then
-          eval(left)
-        else rest.foldLeft(eval(left)){case(acc, (op, x)) => op.applyOperator(acc, eval(x))}
+        rest.foldLeft(eval(left)){case(acc, (op, x)) => op.applyOperator(acc, eval(x))}
 
-      case BoolTerm.UnOp(op, b) =>
-        op.applyOperator(eval(b))
+      case BoolTerm.UnOp(op, BoolBinOp(left, rest)) =>
+        rest.foldLeft(op.applyOperator(eval(left))){case(acc, (op, x)) => op.applyOperator(acc, eval(x))}
+
 
       case BoolTerm.BoolExpr(b) =>
         eval(b)

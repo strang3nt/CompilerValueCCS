@@ -7,16 +7,10 @@ object EvalAexpr:
     a match
       
       case Expr(t, ts) =>
-        if ts.isEmpty then
-          eval(t)
-        else
-          ts.foldLeft(eval(t)){case(acc, (op, x)) => op.applyOperator(acc, eval(x))}
+        ts.foldLeft(eval(t)){case(acc, (op, x)) => op.applyOperator(acc, eval(x))}
 
       case Term(f, fs) =>
-        if fs.isEmpty then
-          eval(f)
-        else
-          fs.foldLeft(eval(f)){case(acc, (op, x)) => op.applyOperator(acc, eval(x))}
+        fs.foldLeft(eval(f)){case(acc, (op, x)) => op.applyOperator(acc, eval(x))}
 
       case Factor.Parenthesis(e) => eval(e)
       
