@@ -11,14 +11,10 @@ import main.scala.ast.Bexpr._
 import UnLogicOperator._
 import LogicOperator._
 import BoolOperator._
-import Bexpr._
 import BoolTerm._
 
 import main.scala.ast.Aexpr._
-import Aexpr._
 import Factor._
-import Term._
-import Expr._
 import ValueCCS._
 import Natural._
 
@@ -87,15 +83,15 @@ object ValueCCSParser:
       lazy val term: Parser[Term] =
         (factor ~ (mulOrDiv ~ factor).rep.?)
         .map { 
-          case(f, Some(l)) => Multiplication(f, l.toList) 
-          case(f, None) => Multiplication(f, List.empty)}
+          case(f, Some(l)) => Term(f, l.toList) 
+          case(f, None) => Term(f, List.empty)}
       lazy val expr: Parser[Expr] = 
         (term ~ (addOrSub ~ term).rep.?)
         .map{ 
-          case(t, Some (l)) => Summation(t, l.toList) 
-          case(t, None) => Summation(t, List.empty)}
+          case(t, Some (l)) => Expr(t, l.toList) 
+          case(t, None) => Expr(t, List.empty)}
 
-      Parser.oneOf(expr.backtrack :: term.backtrack :: factor :: Nil).map{case a: (Expr | Term | Factor) => Aexpr(a)}
+      Parser.oneOf(expr.backtrack :: term.backtrack :: factor :: Nil)
 
 
     private[parser] val bexpr: Parser[Bexpr] =
@@ -109,7 +105,7 @@ object ValueCCSParser:
           case (b, Some(l)) => BoolBinOp(b, l.toList)
           case (b, None) => BoolBinOp(b, List.empty)}
       lazy val exprBinOp: Parser[ExprBinOp] = (this.aexpr ~ boolOperator ~ this.aexpr).map{case((l, o), r) => ExprBinOp(l, o, r)}
-      Parser.oneOf(boolBinOp.backtrack :: boolTerm.backtrack :: exprBinOp :: Nil).map{ case b: (BoolBinOp | BoolTerm | ExprBinOp) => Bexpr(b)}
+      Parser.oneOf(boolBinOp.backtrack :: boolTerm.backtrack :: exprBinOp :: Nil)
     
 
     private[parser] val constant: Parser[Constant] =

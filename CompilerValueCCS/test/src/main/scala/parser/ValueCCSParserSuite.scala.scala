@@ -2,6 +2,7 @@ package main.scala.parser
 
 import main.scala.parser.ValueCCSParser._
 import main.scala.ast.ValueCCSAst._
+import main.scala.eval.EvalAexpr._
 
 
 class ValueCCSParserSuite extends munit.FunSuite {
@@ -15,7 +16,7 @@ class ValueCCSParserSuite extends munit.FunSuite {
     }
 
     assertEquals(obtained.toString, "5 + 2 * 3 - 4")
-    assertEquals(obtained.eval(), Some(7))
+    assertEquals(evalA(obtained), 7)
   }
   test("bexpr") {
     import main.scala.ast.Bexpr._
