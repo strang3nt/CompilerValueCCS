@@ -1,163 +1,169 @@
 package main.scala.parser
 
-import cats.parse.{Numbers, Parser, Parser0}
-import cats.parse.Rfc5234._
-import cats.parse.Numbers._
-import cats.parse.Parser.string
-import main.scala.ast.CommonAst._
-import main.scala.ast.ValueCCSAst._
+import scala.util.parsing.combinator.Parsers
+import scala.util.parsing.combinator.PackratParsers
 
+import scala.util.parsing.input.{ Reader, Position, NoPosition }
+
+import main.scala.lexer.CCSToken
+import CCSToken._
+
+import main.scala.ast.Aexpr._
+import Factor._  
+import main.scala.ast.Naturals._
+import main.scala.ast.ValueCCSAst._
+import ValueCCS._
+import main.scala.ast.CommonAst.Variable
 import main.scala.ast.Bexpr._
+import BoolTerm._
 import UnLogicOperator._
 import LogicOperator._
 import BoolOperator._
-import BoolTerm._
+import main.scala.ast.CommonAst.Tau
+import main.scala.ast.CommonAst.Channel
 
-import main.scala.ast.Aexpr._
-import Factor._
-import ValueCCS._
-import Natural._
+object ValueCCSParser extends Parsers with PackratParsers:
+  override type Elem = CCSToken
 
-object ValueCCSParser:
+  class CCSTokenReader(tokens: Seq[CCSToken]) extends Reader[CCSToken] {
+    override def first: CCSToken = tokens.head
+    override def atEnd: Boolean = tokens.isEmpty
+    override def pos: Position = tokens.headOption.map(_.pos).getOrElse(NoPosition)
+    override def rest: Reader[CCSToken] = new CCSTokenReader(tokens.tail)
+  }
 
+  def apply[A](tokens: Seq[CCSToken], program: PackratParser[A]): Either[((Int, Int), String), A] = {
+    val reader = new PackratReader(new CCSTokenReader(tokens))
+    program(reader) match {
+      case NoSuccess(msg, next) => Left(((next.pos.line, next.pos.column), msg))
+      case Success(result, next) => Right(result)
+      case err @ _ => throw new Exception(s"ValueCCSParser: Fatal: $err")
+    }
+  }
+  
+  lazy val program: PackratParser[ValueCCS] = phrase(valueCCS)
 
-    def parse(input : String): Either[Parser.Error, ValueCCS] =
-      valueCCS
-        .parse(input.filterNot(_.isWhitespace))
-        .map(_._2)
+  lazy val aexpr: PackratParser[Aexpr] = 
+    positioned {
+      lazy val parenthesis = LBRACKET() ~> expr <~ RBRACKET() ^^ (Parenthesis(_))
+      lazy val number = integer ^^ { case INTEGER(nat) => NUMBER(Natural(nat))}
+      lazy val id = identifier ^^ { case IDENTIFIER(name) => ID(Variable(name))}
+      lazy val factor = number | parenthesis | id
+      lazy val term = factor ~ rep((DIV() | MUL()) ~ factor).? ^^ {
+        case f ~ None => Term(f, List.empty)
+        case f ~ Some(l) => Term(f, l.map{
+          case DIV() ~ x => (Div, x)
+          case MUL() ~ x => (Mul, x)
+        })
+        }
 
-    private val separator = Parser.char('.').void
-    private val lowerCaseString = Parser.charWhere(c => c.isLower && c.isLetter).rep.string
-    private val op = Parser.char('(')
-    private val cp = Parser.char(')')
+      lazy val expr: Parser[Expr] = term ~ rep( (SUM() | SUB()) ~ term).? ^^ {
+        case t ~ None => Expr(t, List.empty)
+        case t ~ Some(l) => Expr(t, l.map{
+          case SUM() ~ x => (Add, x)
+          case SUB() ~ x => (Sub, x)})}
 
-    private val variable = lowerCaseString map (Variable(_))
-    private val channel = lowerCaseString map (Channel(_))
-    private val tau = Parser.string("tau") map (_ => Tau())
-    private val number = Parser
-      .stringIn("1" :: "2" ::"3" :: "4" :: "5" :: Nil)
-      .map{ 
-        case "1" => One
-        case "2" => Two
-        case "3" => Three
-        case "4" => Four
-        case "5" => Five
-      }
+      expr | factor | term
+    }
 
-    private val addOrSub: Parser[Add.type | Sub.type] = Parser
-      .stringIn("+" :: "-" :: Nil)
-      .map {
-        case "-" => Sub
-        case "+" => Add
-      }
-
-    private val mulOrDiv: Parser[Mul.type | Div.type] = Parser
-      .stringIn("\\" :: "*" :: Nil)
-      .map {
-        case "\\" => Div
-        case "*" => Mul
-      }
-
-    private val unLogicOperator = Parser.stringIn("!" :: Nil).map{ case "!" => Neq }
-    private val logicOperator = Parser
-      .stringIn("&&" :: "||" :: Nil)
-      .map {
-        case "&&" => Land
-        case "||" => Lor
-      }
-    private val boolOperator = Parser
-      .stringIn("<" :: ">" :: "<=" :: ">=" :: "==" :: Nil)
-      .map {
-        case "<=" => Leq
-        case "==" => Eq
-        case "<" => Le
-        case ">" => Ge
-        case ">=" => Geq
-      }
-
-
-    private[parser] val aexpr: Parser[Aexpr] =
-      lazy val parenthesis = (op.string *> expr <* cp.string).map (Parenthesis(_))
-      lazy val number_ = number map (NUMBER(_))
-      lazy val id = variable map (ID(_))
-      lazy val factor: Parser[Factor] = Parser.defer(parenthesis | number_ | id)
-      lazy val term: Parser[Term] =
-        (factor ~ (mulOrDiv ~ factor).rep.?)
-        .map { 
-          case(f, Some(l)) => Term(f, l.toList) 
-          case(f, None) => Term(f, List.empty)}
-      lazy val expr: Parser[Expr] = 
-        (term ~ (addOrSub ~ term).rep.?)
-        .map{ 
-          case(t, Some (l)) => Expr(t, l.toList) 
-          case(t, None) => Expr(t, List.empty)}
-
-      Parser.oneOf(expr.backtrack :: term.backtrack :: factor :: Nil)
-
-
-    private[parser] val bexpr: Parser[Bexpr] =
-      lazy val parBoolOp: Parser[ParBoolOp] = (op.string *> boolBinOp <* cp.string).map(ParBoolOp(_))
-      lazy val boolExpr: Parser[BoolExpr] = exprBinOp.map(BoolExpr(_))
-      lazy val unOp: Parser[UnOp] = (unLogicOperator ~ boolBinOp).map((op, b) => UnOp(op, b))
+  lazy val bexpr: PackratParser[Bexpr]=
+    positioned {
+      lazy val parBoolOp = LBRACKET() ~> boolBinOp <~ RBRACKET() ^^ (ParBoolOp(_))
+      lazy val boolExpr = exprBinOp ^^ (BoolExpr(_))
+      lazy val unOp = unLogicOperator ~ boolBinOp ^^ { case op ~ b => UnOp(op, b)}
       lazy val boolTerm: Parser[BoolTerm] = parBoolOp | boolExpr | unOp
-      lazy val boolBinOp: Parser[BoolBinOp] = Parser
-        .defer(boolTerm ~ (logicOperator ~ boolTerm).rep.?)
-        .map {
-          case (b, Some(l)) => BoolBinOp(b, l.toList)
-          case (b, None) => BoolBinOp(b, List.empty)}
-      lazy val exprBinOp: Parser[ExprBinOp] = (this.aexpr ~ boolOperator ~ this.aexpr).map{case((l, o), r) => ExprBinOp(l, o, r)}
-      Parser.oneOf(boolBinOp.backtrack :: boolTerm.backtrack :: exprBinOp :: Nil)
-    
-
-    private[parser] val constant: Parser[Constant] =
-      val constantName = (Parser.charWhere(_.isUpper) ~ alpha.rep0).string
-      (constantName ~ (op *> aexpr.repSep(Parser.char(',')) <* cp).?)
-        .map{case (name, list) => Constant (name, list.map { _.toList })}
-
-
-    private[parser] lazy val inputCh = 
-      val act: Parser[Tau | Channel] = (tau.backtrack | channel) map {
-        case Tau() => Tau()
-        case Channel(name) => Channel(name)
+      lazy val boolBinOp = boolTerm ~ rep(logicOperator ~ boolTerm).? ^^ {
+        case b ~ None => BoolBinOp(b, List.empty)
+        case b ~ Some(l) => BoolBinOp(b, l.map{ case op ~ b => (op, b)})
       }
-      Parser
-        .defer((act ~ ( op *> variable <* cp).?) ~ (separator *> valueCCS).?)
-        .map{case ((ch, v), proc) => InputCh (ch, v, proc)}
+      lazy val exprBinOp = aexpr ~ boolOperator ~ aexpr ^^ { case l ~ o ~ r => ExprBinOp(l, o, r)}
+      boolBinOp | boolTerm | exprBinOp
+    }
 
+  private lazy val unLogicOperator: PackratParser[UnLogicOperator] = 
+    positioned {
+      accept("Unary logic operator", { case NOT() => Neq})
+    }
 
-    private[parser] lazy val outputCh = Parser
-      .defer((Parser.char('\'') *> channel) ~ (op *> aexpr <* cp).? ~ (separator *> valueCCS).?)
-      .map { case ((ch, v), proc) => OutputCh (ch, v, proc) }
+  private lazy val logicOperator: PackratParser[LogicOperator] =
+    positioned {
+      accept("Logic operator", {
+        case OR() => Lor 
+        case AND() => Land
+      })
+    }
 
+  private lazy val boolOperator: PackratParser[BoolOperator] =
+    positioned {
+      accept("Bool operator", {
+        case LEQ() => Leq
+        case LE() => Le
+        case GEQ() => Geq
+        case GE() => Ge
+        case EQUALS() => Eq
+      })
+    }
 
-    private[parser] lazy val ifThen = Parser
-      .defer((Parser.string("if") ~ op *> bexpr <* cp) ~ (Parser.string("then") *> valueCCS))
-      .map(IfThen (_, _))
+  private lazy val identifier: PackratParser[IDENTIFIER] = 
+    positioned {
+      accept("identifier", { case id @ IDENTIFIER(_) => id })
+    }
 
+  private lazy val integer: PackratParser[INTEGER] = 
+    positioned {
+      accept("integer", { case lit @ INTEGER(_) => lit })
+    }
 
-    private[parser] lazy val par = Parser
-      .defer(valueCCS ~ (Parser.char('|').void *> valueCCS))
-      .map(Par(_, _))
+  private lazy val tau: PackratParser[Tau] =
+    positioned {
+      accept("tau", { case TAU() => Tau() })
+    }
+  
+  lazy val valueCCS: PackratParser[ValueCCS] =
+    positioned { sum | constant | inputCh | outputCh | tauCh | ifThen | par | restrict }
 
+  lazy val constant: PackratParser[ValueCCS] = positioned {
+    identifier ~ (LBRACKET() ~> rep1sep(aexpr, COMMA()) <~ RBRACKET()).? ^^ {
+      case IDENTIFIER(name) ~ None => Constant(name, None)
+      case IDENTIFIER(name) ~ Some(l) => Constant(name, Some(l))
+    }
+  }
 
-    private[parser] lazy val sum = Parser
-      .defer(
-        Parser.string("0").map(_ => Sum(List.empty)) | valueCCS.repSep(Parser.char('+')).map(l => Sum (l.toList)))
+  lazy val inputCh: PackratParser[ValueCCS] = positioned {
+    identifier ~ (LBRACKET() ~> identifier <~ RBRACKET()).? ~ (SEPARATOR() ~> valueCCS) ^^ {
+      case IDENTIFIER(ch) ~ Some(IDENTIFIER(name)) ~ proc => InputCh(Channel(ch), Some(Variable(name)), proc)
+      case IDENTIFIER(ch) ~ None ~ proc => InputCh(Channel(ch), None, proc)
+    }
+  }
 
+  lazy val outputCh: PackratParser[ValueCCS] = positioned {
+    OUT() ~> identifier ~ (LBRACKET() ~> aexpr <~ RBRACKET()).? ~ (SEPARATOR() ~> valueCCS) ^^ {
+      case IDENTIFIER(name) ~ e ~ proc => OutputCh(Channel(name), e, proc)
+    }
+  }
 
-    private[parser] lazy val restrict = Parser
-      .defer(valueCCS ~ ((Parser.char('\\') ~ Parser.char('{')) *> channel.repSep(Parser.char(',')) <* Parser.char('}')))
-      .map{case (proc, chs) => Restrict (proc, chs.toList)}
+  lazy val tauCh: PackratParser[ValueCCS] = positioned {
+    tau ~ (SEPARATOR() ~> valueCCS) ^^ {
+      case in ~ proc => InputCh(in, None, proc)
+    }
+  }
 
+  lazy val ifThen: PackratParser[ValueCCS] = positioned {
+    ((IF() ~ LBRACKET().?) ~> bexpr <~ (RBRACKET()).?) ~ (THEN() ~> valueCCS) ^^ {
+      case b ~ proc => IfThen(b, proc)
+    }
+  }
 
-    private[parser] lazy val valueCCS: Parser[ValueCCS] =
-      Parser.oneOf(
-        constant :: 
-        inputCh :: 
-        outputCh :: 
-        ifThen :: 
-        par :: 
-        sum :: 
-        restrict :: 
-        Nil
-      )
+  lazy val par: PackratParser[ValueCCS] = positioned {
+    valueCCS ~ (PAR() ~> valueCCS) ^^ { case l ~ r => Par(l, r) }
+  }
+
+  lazy val sum: PackratParser[ValueCCS] = positioned {
+    rep1sep(valueCCS, SUM()) ^^ { case l => Sum(l) } | integer ^^ { case INTEGER(0) => Sum(List.empty)}
+  }
+
+  lazy val restrict: PackratParser[ValueCCS] = positioned {
+    valueCCS ~ ( (RESTR() ~ LCBRACKET()) ~> rep1sep(identifier, COMMA()) <~ RCBRACKET() ) ^^ {
+      case proc ~ l => Restrict(proc, l.map{case IDENTIFIER(name) => Channel(name)})
+    }
+  }

@@ -3,7 +3,7 @@ import mill._, scalalib._
 object CompilerValueCCS extends ScalaModule {
   def scalaVersion = "3.1.1"
   def ivyDeps = Agg(
-      ivy"org.typelevel::cats-parse:0.3.7"
+      ivy"org.scala-lang.modules::scala-parser-combinators:2.1.1"
   )
 
   object test extends Tests {

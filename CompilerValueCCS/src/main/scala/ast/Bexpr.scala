@@ -3,6 +3,9 @@ package main.scala.ast
 import Aexpr._
 import main.scala.eval.ApplyOperator
 import main.scala.eval.ApplyUnaryOperator
+import Naturals._
+import CommonAst._
+import scala.util.parsing.input.Positional
 
 
 // EBNF (Extended Backus–Naur form):
@@ -11,7 +14,7 @@ import main.scala.eval.ApplyUnaryOperator
 // exprbinop -> aexpr (< | > | ...) aexpr
 object Bexpr {
 
-  enum UnLogicOperator extends ApplyUnaryOperator[Boolean, Boolean]:
+  enum UnLogicOperator extends ApplyUnaryOperator[Boolean, Boolean], Positional:
     override def toString: String =
       this match {
         case _ => "!"
@@ -23,7 +26,7 @@ object Bexpr {
     case Neq
 
 
-  enum LogicOperator extends ApplyOperator[Boolean, Boolean]:
+  enum LogicOperator extends ApplyOperator[Boolean, Boolean], Positional:
     override def toString: String =
       this match {
         case Land => "&&"
@@ -37,7 +40,7 @@ object Bexpr {
     case Land
     case Lor
 
-  enum BoolOperator extends ApplyOperator[Int, Boolean]:
+  enum BoolOperator extends ApplyOperator[Natural, Boolean], Positional:
     override def toString: String =
       this match
         case Leq => "<="
@@ -46,7 +49,7 @@ object Bexpr {
         case Ge => ">"
         case Eq => "=="
 
-    override def applyOperator(x: Int, y: Int): Boolean =
+    override def applyOperator(x: Natural, y: Natural): Boolean =
       this match
         case Leq => x <= y
         case Le => x < y
@@ -60,7 +63,8 @@ object Bexpr {
     case Ge
     case Eq
   
-  sealed trait Bexpr:
+  sealed trait Bexpr extends Positional:
+
       def containsVariable: Boolean =
         this match
           case BoolBinOp(left, rest) =>
@@ -76,6 +80,7 @@ object Bexpr {
           
 
   final case class BoolBinOp(left: BoolTerm, rest: List[(LogicOperator, BoolTerm)]) extends Bexpr:
+
     override def toString: String =
       if this.rest.isEmpty then
         this.left.toString
@@ -83,6 +88,7 @@ object Bexpr {
         this.left.toString + " " +  this.rest.map((o, t) => o.toString + " " + t.toString).mkString
 
   final case class ExprBinOp(left: Aexpr, op: BoolOperator, right: Aexpr) extends Bexpr:
+
     override def toString: String = 
       this.left.toString + " " + this.op.toString + " " + this.right.toString
 
@@ -90,7 +96,7 @@ object Bexpr {
     case UnOp(op: UnLogicOperator, b: BoolBinOp)
     case BoolExpr(b: ExprBinOp)
     case ParBoolOp(b: BoolBinOp)
-
+    
     override def toString: String =
       this match
         case UnOp(op, b) => op.toString + b.toString
