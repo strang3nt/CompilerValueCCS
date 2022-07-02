@@ -1,27 +1,16 @@
 package main.scala.parser
 
 import main.scala.parser.ValueCCSParser._
-import main.scala.ast.ValueCCSAst._
 import main.scala.eval.EvalAexpr.{ eval => evalA }
 import main.scala.eval.EvalBexpr.{ eval => evalB }
 import main.scala.ast.Naturals.Natural
-import main.scala.lexer.CCSToken
-import main.scala.lexer.CCSLexer
-import main.scala.ast.Aexpr.Aexpr
-import main.scala.ast.Aexpr.Factor
-import main.scala.ast.CommonAst.Variable
-import main.scala.ast.Aexpr.Expr
-import main.scala.ast.Aexpr.Term
-import Factor._
-import main.scala.ast.Aexpr.Add
-import main.scala.ast.Aexpr.Sub
-import main.scala.ast.Aexpr.Mul
+import main.scala.lexer._
+import main.scala.ast.Aexpr._
+import main.scala.ast.Aexpr.Factor._
 import main.scala.ast.ValueCCSAst._
-import ValueCCS._
-import main.scala.ast.CommonAst.Channel
-import main.scala.ast.CommonAst.Tau
-import main.scala.ast.Bexpr.ExprBinOp
-import main.scala.ast.Bexpr.BoolBinOp
+import main.scala.ast.ValueCCSAst.ValueCCS._
+import main.scala.ast.CommonAst._
+import main.scala.ast.Bexpr._
 import main.scala.ast.Bexpr.BoolOperator._
 import main.scala.ast.Bexpr.BoolTerm._
 

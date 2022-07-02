@@ -6,6 +6,6 @@ enum CCSSystem:
 
   override def toString() =
     this match {
-      case PureCCSSystem(s) => s.mkString("\n")
+      case PureCCSSystem(s)  => s.mkString("\n")
       case ValueCCSSystem(s) => s.mkString("\n")
     }

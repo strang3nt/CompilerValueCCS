@@ -3,12 +3,12 @@ package main.scala.lexer
 import scala.util.parsing.input.Positional
 
 enum CCSToken extends Positional:
-  
+
   case IDENTIFIER(str: String)
   case INTEGER(num: Int)
   case DEF() // =
   case SEPARATOR() // .
-  case OUT()       // '
+  case OUT() // '
   case COMMA()
   case LBRACKET()
   case RBRACKET()

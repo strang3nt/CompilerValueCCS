@@ -12,23 +12,29 @@ object CCSLexer extends RegexParsers:
 
   def apply(code: String): Either[((Int, Int), String), List[CCSToken]] = {
     parse(tokens, code) match {
-      case NoSuccess(msg, next) => Left((next.pos.line, next.pos.column), msg)
+      case NoSuccess(msg, next)  => Left((next.pos.line, next.pos.column), msg)
       case Success(result, next) => Right(result)
       case err @ _ => throw new Exception(s"CCSLexer: Fatal: $err")
     }
   }
 
   def tokens: Parser[List[CCSToken]] = {
-    phrase(rep1(integer | equals | separator | comma | out | lbracket |
-      rbracket | sum | sub | mul | div | leq | le | geq | ge | define | not | and |
-      or | par | ifStatement | thenStatement | restr | tau |identifier | lcbracket | rcbracket))
+    phrase(
+      rep1(
+        integer | equals | separator | comma | out | lbracket |
+          rbracket | sum | sub | mul | div | leq | le | geq | ge | define | not | and |
+          or | par | ifStatement | thenStatement | restr | tau | identifier | lcbracket | rcbracket
+      )
+    )
   }
 
   def identifier: Parser[IDENTIFIER] = positioned {
     "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ (IDENTIFIER(_))
   }
 
-  def integer: Parser[INTEGER] = positioned { """[1-9]\d*""".r ^^ (i => INTEGER(i.toInt)) }
+  def integer: Parser[INTEGER] = positioned {
+    """[1-9]\d*""".r ^^ (i => INTEGER(i.toInt))
+  }
   def define: Parser[DEF] = positioned { "=" ^^^ DEF() }
   def separator: Parser[SEPARATOR] = positioned { "." ^^^ SEPARATOR() }
   def comma: Parser[COMMA] = positioned { "," ^^^ COMMA() }
@@ -54,6 +60,6 @@ object CCSLexer extends RegexParsers:
 
   def par: Parser[PAR] = positioned { "|" ^^^ PAR() }
   def ifStatement: Parser[IF] = positioned { "if" ^^^ IF() }
-  def thenStatement: Parser[THEN] = positioned { "then" ^^^ THEN() } 
+  def thenStatement: Parser[THEN] = positioned { "then" ^^^ THEN() }
   def restr: Parser[RESTR] = positioned { "\\" ^^^ RESTR() }
   def tau: Parser[TAU] = positioned { "tau" ^^ (_ => TAU()) }
