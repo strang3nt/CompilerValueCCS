@@ -1,9 +1,9 @@
 package main.scala.lexer
 
-import scala.util.parsing.combinator.RegexParsers
 import scala.util.parsing.combinator.JavaTokenParsers
+import scala.util.parsing.combinator.RegexParsers
 
-import CCSToken._
+import main.scala.lexer.{DEF}
 
 object CCSLexer extends RegexParsers:
 
@@ -23,7 +23,7 @@ object CCSLexer extends RegexParsers:
       rep1(
         integer | equals | separator | comma | out | lbracket |
           rbracket | sum | sub | mul | div | leq | le | geq | ge | define | not | and |
-          or | par | ifStatement | thenStatement | restr | tau | identifier | lcbracket | rcbracket
+          or | par | ifStatement | thenStatement | restr | tau | identifier | curly_lbracket | curly_rbracket
       )
     )
   }
@@ -31,35 +31,38 @@ object CCSLexer extends RegexParsers:
   def identifier: Parser[IDENTIFIER] = positioned {
     "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ (IDENTIFIER(_))
   }
-
   def integer: Parser[INTEGER] = positioned {
     """[1-9]\d*""".r ^^ (i => INTEGER(i.toInt))
   }
-  def define: Parser[DEF] = positioned { "=" ^^^ DEF() }
-  def separator: Parser[SEPARATOR] = positioned { "." ^^^ SEPARATOR() }
-  def comma: Parser[COMMA] = positioned { "," ^^^ COMMA() }
-  def out: Parser[OUT] = positioned { "'" ^^^ OUT() }
-  def lbracket: Parser[LBRACKET] = positioned { "(" ^^^ LBRACKET() }
-  def rbracket: Parser[RBRACKET] = positioned { ")" ^^^ RBRACKET() }
-  def lcbracket: Parser[LCBRACKET] = positioned { "{" ^^^ LCBRACKET() }
-  def rcbracket: Parser[RCBRACKET] = positioned { "}" ^^^ RCBRACKET() }
+  def define: Parser[DEF.type] = positioned { "=" ^^^ DEF }
+  def separator: Parser[SEPARATOR.type] = positioned { "." ^^^ SEPARATOR }
+  def comma: Parser[COMMA.type] = positioned { "," ^^^ COMMA }
+  def out: Parser[OUT.type] = positioned { "'" ^^^ OUT }
+  def lbracket: Parser[LBRACKET.type] = positioned { "(" ^^^ LBRACKET }
+  def rbracket: Parser[RBRACKET.type] = positioned { ")" ^^^ RBRACKET }
+  def curly_lbracket: Parser[CURLY_LBRACKET.type] = positioned {
+    "{" ^^^ CURLY_LBRACKET
+  }
+  def curly_rbracket: Parser[CURLY_RBRACKET.type] = positioned {
+    "}" ^^^ CURLY_RBRACKET
+  }
 
-  def sum: Parser[SUM] = positioned { "+" ^^^ SUM() }
-  def sub: Parser[SUB] = positioned { "-" ^^^ SUB() }
-  def mul: Parser[MUL] = positioned { "*" ^^^ MUL() }
-  def div: Parser[DIV] = positioned { "/" ^^^ DIV() }
+  def sum: Parser[SUM.type] = positioned { "+" ^^^ SUM }
+  def sub: Parser[SUB.type] = positioned { "-" ^^^ SUB }
+  def mul: Parser[MUL.type] = positioned { "*" ^^^ MUL }
+  def div: Parser[DIV.type] = positioned { "/" ^^^ DIV }
 
-  def leq: Parser[LEQ] = positioned { "<=" ^^^ LEQ() }
-  def le: Parser[LE] = positioned { "<" ^^^ LE() }
-  def geq: Parser[GEQ] = positioned { ">=" ^^^ GEQ() }
-  def ge: Parser[GE] = positioned { ">" ^^^ GE() }
-  def equals: Parser[EQUALS] = positioned { "==" ^^^ EQUALS() }
-  def not: Parser[NOT] = positioned { "!" ^^^ NOT() }
-  def and: Parser[AND] = positioned { "&&" ^^^ AND() }
-  def or: Parser[OR] = positioned { "||" ^^^ OR() }
+  def leq: Parser[LEQ.type] = positioned { "<=" ^^^ LEQ }
+  def le: Parser[LE.type] = positioned { "<" ^^^ LE }
+  def geq: Parser[GEQ.type] = positioned { ">=" ^^^ GEQ }
+  def ge: Parser[GE.type] = positioned { ">" ^^^ GE }
+  def equals: Parser[EQUALS.type] = positioned { "==" ^^^ EQUALS }
+  def not: Parser[NOT.type] = positioned { "!" ^^^ NOT }
+  def and: Parser[AND.type] = positioned { "&&" ^^^ AND }
+  def or: Parser[OR.type] = positioned { "||" ^^^ OR }
 
-  def par: Parser[PAR] = positioned { "|" ^^^ PAR() }
-  def ifStatement: Parser[IF] = positioned { "if" ^^^ IF() }
-  def thenStatement: Parser[THEN] = positioned { "then" ^^^ THEN() }
-  def restr: Parser[RESTR] = positioned { "\\" ^^^ RESTR() }
-  def tau: Parser[TAU] = positioned { "tau" ^^ (_ => TAU()) }
+  def par: Parser[PAR.type] = positioned { "|" ^^^ PAR }
+  def ifStatement: Parser[IF.type] = positioned { "if" ^^^ IF }
+  def thenStatement: Parser[THEN.type] = positioned { "then" ^^^ THEN }
+  def restr: Parser[RESTR.type] = positioned { "\\" ^^^ RESTR }
+  def tau: Parser[TAU.type] = positioned { "tau" ^^ (_ => TAU) }

@@ -18,16 +18,16 @@ object ValueCCSAst:
             .map { "(" ++ _.toString ++ ")" }
             .getOrElse("") ++ " . " ++ p.toString
         case OutputCh(c, e, p) =>
-          c.toString ++ e
+          "'" + c.toString ++ e
             .map { "(" ++ _.toString ++ ")" }
             .getOrElse("") ++ " . " ++ p.toString
         case IfThen(b, p) =>
           "if" ++ "(" ++ b.toString ++ ")" ++ " then " ++ p.toString
         case Par(left, right)    => left.toString ++ " | " ++ right.toString
         case Sum(l) if l.isEmpty => "0"
-        case Sum(l)              => l.mkString(", ")
+        case Sum(l)              => l.mkString(" + ")
         case Restrict(p, l) =>
-          p.toString ++ " \\ " ++ " {" ++ l.mkString(", ") ++ "}"
+          p.toString ++ " \\ " ++ "{" ++ l.mkString(", ") ++ "}"
         case Redirection(p, cs) =>
           p.toString + "{" + cs
             .map((n, o) => n.toString + "/" + o.toString)
