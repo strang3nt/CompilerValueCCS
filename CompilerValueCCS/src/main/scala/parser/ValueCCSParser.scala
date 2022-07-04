@@ -1,24 +1,19 @@
 package main.scala.parser
 
-import main.scala.ast.Aexpr.Factor._
+import main.scala.ast._
 import main.scala.ast.Aexpr._
+import main.scala.ast.Aexpr.Factor._
+import main.scala.ast.Bexpr._
 import main.scala.ast.Bexpr.BoolOperator._
 import main.scala.ast.Bexpr.BoolTerm._
 import main.scala.ast.Bexpr.LogicOperator._
 import main.scala.ast.Bexpr.UnLogicOperator._
-import main.scala.ast.Bexpr._
 import main.scala.ast.CommonAst._
-import main.scala.ast.Naturals._
-import main.scala.ast.ValueCCSAst.ValueCCS._
-import main.scala.ast.ValueCCSAst._
-import main.scala.lexer._
+import main.scala.ast.ValueCCS._
+import main.scala.process.{ValueCCSProcess, Constant as ProcessConstant}
 
-import scala.util.parsing.combinator.PackratParsers
-import scala.util.parsing.combinator.Parsers
-import scala.util.parsing.input.NoPosition
-import scala.util.parsing.input.Position
-import scala.util.parsing.input.Reader
-import scala.PartialFunction.AndThen
+import scala.util.parsing.combinator.{PackratParsers, Parsers}
+import scala.util.parsing.input.{NoPosition, Position, Reader}
 
 object ValueCCSParser extends Parsers with PackratParsers:
   override type Elem = CCSToken
@@ -43,7 +38,8 @@ object ValueCCSParser extends Parsers with PackratParsers:
     }
   }
 
-  lazy val program: PackratParser[ValueCCS] = phrase(valueCCS)
+  lazy val program: PackratParser[ValueCCSProcess] = phrase(process_constant ~ DEF ~ valueCCS ^^ {
+    case c ~ _ ~ v => ValueCCSProcess(c, v)})
 
   lazy val valueCCS: PackratParser[ValueCCS] =
     positioned {
@@ -169,6 +165,16 @@ object ValueCCSParser extends Parsers with PackratParsers:
     ) <~ RBRACKET).? ^^ {
       case IDENTIFIER(name) ~ None    => Constant(name, None)
       case IDENTIFIER(name) ~ Some(l) => Constant(name, Some(l))
+    }
+  }
+
+  def process_constant = positioned {
+    capital_case_identifier ~ (LBRACKET ~> rep1sep(
+      small_case_identifier,
+      COMMA
+    ) <~ RBRACKET).? ^^ {
+      case IDENTIFIER(name) ~ None    => ProcessConstant(name, None)
+      case IDENTIFIER(name) ~ Some(l) => ProcessConstant(name, Some(l.map{ case IDENTIFIER(name) => Variable(name)}))
     }
   }
 

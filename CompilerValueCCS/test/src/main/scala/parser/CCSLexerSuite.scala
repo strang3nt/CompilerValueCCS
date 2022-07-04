@@ -1,7 +1,7 @@
-package main.scala.lexer
+package main.scala.parser
 
-import main.scala.lexer.CCSLexer._
-import main.scala.lexer._
+import main.scala.parser.*
+import main.scala.parser.CCSLexer.*
 
 
 class CCSLexerSuite extends munit.FunSuite {

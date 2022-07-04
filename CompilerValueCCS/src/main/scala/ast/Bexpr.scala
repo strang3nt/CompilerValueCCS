@@ -1,17 +1,17 @@
 package main.scala.ast
 
-import Aexpr._
-import main.scala.eval.ApplyOperator
-import main.scala.eval.ApplyUnaryOperator
-import Naturals._
-import CommonAst._
+import main.scala.ast.Aexpr._
+import main.scala.ast.CommonAst._
+import main.scala.ast.Natural
+import main.scala.eval.{ApplyOperator, ApplyUnaryOperator}
+
 import scala.util.parsing.input.Positional
 
 // EBNF (Extended Backus–Naur form):
 // boolbinop -> term [(&& | ||) term]*
 // term -> '!' boolbinop | exprbinop | '(' boolbinop ')'
 // exprbinop -> aexpr (< | > | ...) aexpr
-object Bexpr {
+object Bexpr:
 
   enum UnLogicOperator extends ApplyUnaryOperator[Boolean, Boolean], Positional:
     override def toString: String =
@@ -103,5 +103,3 @@ object Bexpr {
         case UnOp(op, b)  => op.toString + b.toString
         case BoolExpr(b)  => b.toString
         case ParBoolOp(b) => "(" + b.toString + ")"
-
-}

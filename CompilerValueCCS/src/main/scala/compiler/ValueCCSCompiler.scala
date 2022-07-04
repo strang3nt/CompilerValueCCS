@@ -1,49 +1,42 @@
 package main.scala.compiler
 
-import scala.collection.immutable.Map
-
-import main.scala.ast.CommonAst._
-import main.scala.ast.Naturals._
 import main.scala.ast.Aexpr._
 import main.scala.ast.Bexpr._
-import main.scala.ast.PureCCSAst.{PureCCS => P}
-import main.scala.ast.ValueCCSAst.{ValueCCS => V}
-
-import main.scala.eval.EvalAexpr.{eval => evalA}
-import main.scala.eval.EvalBexpr.{eval => evalB}
-
+import main.scala.ast.CommonAst._
+import main.scala.ast.Natural
+import main.scala.ast.PureCCS as P
+import main.scala.ast.ValueCCS as V
+import main.scala.ast.ValueCCS.Constant
+import main.scala.eval.EvalAexpr.eval as evalA
+import main.scala.eval.EvalBexpr.eval as evalB
 import main.scala.parser.ValueCCSParser
+import main.scala.process.{PureCCSProcess, ValueCCSProcess, Constant as ProcessConstant}
 
-import main.scala.process.CCSSystem._
-import main.scala.process.{ValueCCSProcess, Constant => Proc}
-import main.scala.process.PureCCSProcess
+import scala.collection.immutable.Map
 
 object ValueCCSCompiler {
 
-  def compile(system: ValueCCSSystem, maxNat: Int): String =
-    system.l
-      .map { case ValueCCSProcess(name, process) =>
-        name match
-          case Proc(n, Some(l)) =>
-            var substCombinations: List[List[Natural]] =
-              (List
-                .fill(l.length)(0 to maxNat))
-                .flatten
-                .combinations(l.length)
-                .toList
-                .foldLeft(List.empty)((acc, l) =>
-                  acc ++ l.map(Natural(_)).permutations.toList
-                )
-            substCombinations.map((nats) =>
-              PureCCSProcess(
-                n + "_" + nats.mkString("_"),
-                translateProcess(process, maxNat, (l zip nats).toMap)
-              )
+  def compile(program: ValueCCSProcess, maxNat: Int): String =
+    val ValueCCSProcess(name, process) = program
+    name match
+      case ProcessConstant(n, Some(l)) =>
+        var substCombinations: List[List[Natural]] =
+          (List
+            .fill(l.length)(0 to maxNat))
+            .flatten
+            .combinations(l.length)
+            .toList
+            .foldLeft(List.empty)((acc, l) =>
+              acc ++ l.map(Natural(_)).permutations.toList
             )
-          case Proc(n, None) =>
-            PureCCSProcess(n, translateProcess(process, maxNat, Map.empty))
-      }
-      .mkString("\n")
+        substCombinations.map((nats) =>
+          PureCCSProcess(
+            n + "_" + nats.mkString("_"),
+            translateProcess(process, maxNat, (l zip nats).toMap)
+          )
+        ).mkString("\n")
+      case ProcessConstant(n, None) =>
+        PureCCSProcess(n, translateProcess(process, maxNat, Map.empty)).toString
 
   private def translateProcess(
       src: V,

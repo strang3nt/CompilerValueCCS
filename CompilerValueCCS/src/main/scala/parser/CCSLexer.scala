@@ -1,9 +1,8 @@
-package main.scala.lexer
+package main.scala.parser
 
-import scala.util.parsing.combinator.JavaTokenParsers
-import scala.util.parsing.combinator.RegexParsers
+import main.scala.parser.DEF
 
-import main.scala.lexer.{DEF}
+import scala.util.parsing.combinator.{JavaTokenParsers, RegexParsers}
 
 object CCSLexer extends RegexParsers:
 

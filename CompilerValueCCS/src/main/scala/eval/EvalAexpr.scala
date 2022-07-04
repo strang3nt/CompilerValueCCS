@@ -1,10 +1,10 @@
 package main.scala.eval
 
-import scala.collection.immutable.Map
-
 import main.scala.ast.Aexpr._
-import main.scala.ast.Naturals._
 import main.scala.ast.CommonAst.Variable
+import main.scala.ast.Natural
+
+import scala.collection.immutable.Map
 
 object EvalAexpr:
   def eval(a: Aexpr, subst: Map[Variable, Natural]): Natural =

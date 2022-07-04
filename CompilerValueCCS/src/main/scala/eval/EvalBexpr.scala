@@ -1,13 +1,13 @@
 package main.scala.eval
 
+import main.scala.ast.Bexpr._
+import main.scala.ast.CommonAst.Variable
+import main.scala.ast.Natural
+import main.scala.eval.EvalAexpr
+
 import scala.collection.immutable.Map
 
-import main.scala.ast.Bexpr._
-import main.scala.eval.EvalAexpr._
-import main.scala.ast.CommonAst.Variable
-import main.scala.ast.Naturals.Natural
-
-object EvalBexpr {
+object EvalBexpr:
 
   def eval(b: Bexpr, subst: Map[Variable, Natural]): Boolean =
     b match
@@ -32,5 +32,3 @@ object EvalBexpr {
           EvalAexpr.eval(left, subst),
           EvalAexpr.eval(right, subst)
         )
-
-}

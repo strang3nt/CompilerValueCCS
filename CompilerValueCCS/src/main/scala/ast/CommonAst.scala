@@ -2,7 +2,7 @@ package main.scala.ast
 
 import scala.util.parsing.input.Positional
 
-object CommonAst {
+object CommonAst:
 
   final case class Channel(name: String) extends Positional:
     override def toString: String = name
@@ -12,4 +12,3 @@ object CommonAst {
 
   final case class Variable(name: String) extends Positional:
     override def toString: String = name
-}
