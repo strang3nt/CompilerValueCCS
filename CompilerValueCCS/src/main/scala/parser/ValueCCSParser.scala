@@ -11,28 +11,30 @@ import main.scala.ast.Bexpr.UnLogicOperator._
 import main.scala.ast.CommonAst._
 import main.scala.ast.ValueCCS._
 import main.scala.process.{ValueCCSProcess, Constant as ProcessConstant}
+import main.scala.compiler.ValueCCSCompilationError.ValueCCSParserError
+import main.scala.compiler.Location
 
 import scala.util.parsing.combinator.{PackratParsers, Parsers}
 import scala.util.parsing.input.{NoPosition, Position, Reader}
 
 object ValueCCSParser extends Parsers with PackratParsers:
-  override type Elem = CCSToken
+  override type Elem = ValueCCSToken
 
-  class CCSTokenReader(tokens: Seq[CCSToken]) extends Reader[CCSToken] {
-    override def first: CCSToken = tokens.head
+  class ValueCCSTokenReader(tokens: Seq[ValueCCSToken]) extends Reader[ValueCCSToken] {
+    override def first: ValueCCSToken = tokens.head
     override def atEnd: Boolean = tokens.isEmpty
     override def pos: Position =
       tokens.headOption.map(_.pos).getOrElse(NoPosition)
-    override def rest: Reader[CCSToken] = new CCSTokenReader(tokens.tail)
+    override def rest: Reader[ValueCCSToken] = new ValueCCSTokenReader(tokens.tail)
   }
 
   def apply[A](
-      tokens: Seq[CCSToken],
+      tokens: Seq[ValueCCSToken],
       program: PackratParser[A]
-  ): Either[((Int, Int), String), A] = {
-    val reader = new PackratReader(new CCSTokenReader(tokens))
+  ): Either[ValueCCSParserError, A] = {
+    val reader = new PackratReader(new ValueCCSTokenReader(tokens))
     program(reader) match {
-      case NoSuccess(msg, next) => Left(((next.pos.line, next.pos.column), msg))
+      case NoSuccess(msg, next) => Left(ValueCCSParserError(Location(next.pos.line, next.pos.column), msg))
       case Success(result, next) => Right(result)
       case err @ _ => throw new Exception(s"ValueCCSParser: Fatal: $err")
     }

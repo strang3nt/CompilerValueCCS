@@ -3,7 +3,6 @@ package main.scala.eval
 import main.scala.ast.Bexpr._
 import main.scala.ast.CommonAst.Variable
 import main.scala.ast.Natural
-import main.scala.eval.EvalAexpr
 
 import scala.collection.immutable.Map
 

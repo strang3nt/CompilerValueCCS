@@ -2,15 +2,10 @@ package main.scala.ast
 
 import main.scala.ast.Aexpr._
 import main.scala.ast.CommonAst._
-import main.scala.ast.Natural
 import main.scala.eval.{ApplyOperator, ApplyUnaryOperator}
 
 import scala.util.parsing.input.Positional
 
-// EBNF (Extended Backus–Naur form):
-// boolbinop -> term [(&& | ||) term]*
-// term -> '!' boolbinop | exprbinop | '(' boolbinop ')'
-// exprbinop -> aexpr (< | > | ...) aexpr
 object Bexpr:
 
   enum UnLogicOperator extends ApplyUnaryOperator[Boolean, Boolean], Positional:

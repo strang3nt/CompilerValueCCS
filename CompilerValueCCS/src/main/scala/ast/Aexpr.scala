@@ -1,15 +1,10 @@
 package main.scala.ast
 
 import main.scala.ast.CommonAst.Variable
-import main.scala.ast.Natural
 import main.scala.eval.ApplyOperator
 
 import scala.util.parsing.input.Positional
 
-// EBNF (Extended Backus–Naur form):
-// expr -> term [ (‘+’ | ‘-’) term ]*
-// term -> factor [ (‘*’ | ‘/’) factor ]*
-// factor -> ‘(‘ expr ‘)’ | ID | NUMBER
 object Aexpr:
 
   sealed trait ExprOperator extends ApplyOperator[Natural, Natural]:

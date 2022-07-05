@@ -1,23 +1,23 @@
 package main.scala.parser
 
-import main.scala.parser.DEF
-
 import scala.util.parsing.combinator.{JavaTokenParsers, RegexParsers}
+import main.scala.compiler.ValueCCSCompilationError.ValueCCSLexerError
+import main.scala.compiler.Location
 
-object CCSLexer extends RegexParsers:
+object ValueCCSLexer extends RegexParsers:
 
   override def skipWhitespace: Boolean = true
   override val whiteSpace = "[ \\s]+".r
 
-  def apply(code: String): Either[((Int, Int), String), List[CCSToken]] = {
+  def apply(code: String): Either[ValueCCSLexerError, List[ValueCCSToken]] = {
     parse(tokens, code) match {
-      case NoSuccess(msg, next)  => Left((next.pos.line, next.pos.column), msg)
+      case NoSuccess(msg, next)  => Left(ValueCCSLexerError(Location(next.pos.line, next.pos.column), msg))
       case Success(result, next) => Right(result)
       case err @ _ => throw new Exception(s"CCSLexer: Fatal: $err")
     }
   }
 
-  def tokens: Parser[List[CCSToken]] = {
+  def tokens: Parser[List[ValueCCSToken]] = {
     phrase(
       rep1(
         integer | equals | separator | comma | out | lbracket |

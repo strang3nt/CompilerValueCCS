@@ -2,7 +2,7 @@ package main.scala.ast
 
 import main.scala.ast.Aexpr.Aexpr
 import main.scala.ast.Bexpr.Bexpr
-import main.scala.ast.CommonAst.{Channel, Tau, Variable}
+import main.scala.ast.CommonAst._
 
 import scala.util.parsing.input.Positional
 

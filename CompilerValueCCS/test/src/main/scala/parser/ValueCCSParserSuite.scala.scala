@@ -17,7 +17,7 @@ class ValueCCSParserSuite extends munit.FunSuite {
   test("aexpr") {
 
     val ast = for {
-      tokens <- CCSLexer("5+24*3-4").right
+      tokens <- ValueCCSLexer("5+24*3-4").right
       ast <- ValueCCSParser(tokens, phrase(ValueCCSParser.aexpr)).right
     } yield ast
     assertEquals(
@@ -34,7 +34,7 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("constant") {
     val ast = for {
-      tokens <- CCSLexer("Kr(x)").right
+      tokens <- ValueCCSLexer("Kr(x)").right
       ast <- ValueCCSParser(tokens, ValueCCSParser.constant).right
     } yield ast
     assertEquals(
@@ -48,7 +48,7 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("inputch") {
     val ast = for {
-      tokens <- CCSLexer("kr(x).K").right
+      tokens <- ValueCCSLexer("kr(x).K").right
       ast <- ValueCCSParser(tokens, ValueCCSParser.inputCh).right
     } yield ast
     assertEquals(
@@ -59,7 +59,7 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("tauch") {
     val ast = for {
-      tokens <- CCSLexer("tau.K").right
+      tokens <- ValueCCSLexer("tau.K").right
       ast <- ValueCCSParser(tokens, ValueCCSParser.tauCh).right
     } yield ast
     assertEquals(
@@ -70,7 +70,7 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("outputch") {
     val ast = for {
-      tokens <- CCSLexer("'kr(1).K").right
+      tokens <- ValueCCSLexer("'kr(1).K").right
       ast <- ValueCCSParser(tokens, phrase(ValueCCSParser.outputCh)).right
     } yield ast
     assertEquals(
@@ -85,7 +85,7 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("ifthen") {
     val ast = for {
-      tokens <- CCSLexer("if (1 > 2) then K").right
+      tokens <- ValueCCSLexer("if (1 > 2) then K").right
       ast <- ValueCCSParser(tokens, ValueCCSParser.ifThen).right
     } yield ast
     assertEquals(
@@ -108,7 +108,7 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("par") {
     val ast = for {
-      tokens <- CCSLexer("K | K").right
+      tokens <- ValueCCSLexer("K | K").right
       ast <- ValueCCSParser(tokens, ValueCCSParser.par).right
     } yield ast
     assertEquals(
@@ -119,7 +119,7 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("sum") {
     val ast = for {
-      tokens <- CCSLexer("K + K").right
+      tokens <- ValueCCSLexer("K + K").right
       ast <- ValueCCSParser(tokens, ValueCCSParser.sum).right
     } yield ast
     assertEquals(
@@ -130,7 +130,7 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("restrict") {
     val ast = for {
-      tokens <- CCSLexer("K\\{y}").right
+      tokens <- ValueCCSLexer("K\\{y}").right
       ast <- ValueCCSParser(tokens, ValueCCSParser.restrict).right
     } yield ast
     assertEquals(
@@ -141,7 +141,7 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("valueCCS") {
     val ast = for {
-      tokens <- CCSLexer("'kr(x).K|kw(y).K(y)").right
+      tokens <- ValueCCSLexer("'kr(x).K|kw(y).K(y)").right
       ast <- ValueCCSParser(tokens, ValueCCSParser.valueCCS).right
     } yield ast
     assertEquals(
