@@ -13,6 +13,8 @@ case object LBRACKET extends ValueCCSToken
 case object RBRACKET extends ValueCCSToken
 case object CURLY_LBRACKET extends ValueCCSToken
 case object CURLY_RBRACKET extends ValueCCSToken
+case object SQUARED_LBRACKET extends ValueCCSToken
+case object SQUARED_RBRACKET extends ValueCCSToken
 case object SUM extends ValueCCSToken
 case object SUB extends ValueCCSToken
 case object MUL extends ValueCCSToken

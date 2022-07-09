@@ -21,8 +21,9 @@ object ValueCCSLexer extends RegexParsers:
     phrase(
       rep1(
         integer | equals | separator | comma | out | lbracket |
-          rbracket | sum | sub | mul | div | leq | le | geq | ge | define | not | and |
-          or | par | ifStatement | thenStatement | restr | tau | identifier | curly_lbracket | curly_rbracket
+        rbracket | sum | sub | mul | div | leq | le | geq | ge | define | not | and |
+        or | par | ifStatement | thenStatement | restr | tau | identifier | curly_lbracket | curly_rbracket |
+        squared_lbracket | squared_rbracket
       )
     )
   }
@@ -44,6 +45,12 @@ object ValueCCSLexer extends RegexParsers:
   }
   def curly_rbracket: Parser[CURLY_RBRACKET.type] = positioned {
     "}" ^^^ CURLY_RBRACKET
+  }
+  def squared_lbracket: Parser[SQUARED_LBRACKET.type] = positioned {
+    "[" ^^^ SQUARED_LBRACKET
+  }
+  def squared_rbracket: Parser[SQUARED_RBRACKET.type] = positioned {
+    "]" ^^^ SQUARED_RBRACKET
   }
 
   def sum: Parser[SUM.type] = positioned { "+" ^^^ SUM }

@@ -45,7 +45,7 @@ object ValueCCSParser extends Parsers with PackratParsers:
 
   lazy val valueCCS: PackratParser[ValueCCS] =
     positioned {
-      par | sum | restrict | inputCh | outputCh | tauCh | ifThen | constant
+      par | sum | restrict | redirection | inputCh | outputCh | tauCh | ifThen | constant
     }
 
   def aexpr = positioned {
@@ -231,5 +231,14 @@ object ValueCCSParser extends Parsers with PackratParsers:
       COMMA
     ) <~ CURLY_RBRACKET) ^^ { case proc ~ l =>
       Restrict(proc, l.map { case IDENTIFIER(name) => Channel(name) })
+    }
+  }
+
+  lazy val redirection: PackratParser[ValueCCS] = positioned {
+    valueCCS ~ 
+      (SQUARED_LBRACKET ~> 
+        rep1sep(small_case_identifier ~ DIV ~ small_case_identifier, COMMA) 
+      <~ SQUARED_RBRACKET) ^^ { case proc ~ l =>
+      Redirection(proc, l.map { case IDENTIFIER(x) ~ _ ~ IDENTIFIER(y) => (Channel(x), Channel(y)) })
     }
   }

@@ -18,6 +18,7 @@ object PureCCSCompiler {
 
   def apply(program: ValueCCSProcess, maxNat: Int): List[PureCCSProcess] =
     val ValueCCSProcess(name, process) = program
+    val natSet = 0 to maxNat
     name match
       case ProcessConstant(n, Some(l)) =>
         var substCombinations: List[List[Natural]] =
