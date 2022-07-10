@@ -15,9 +15,9 @@ enum PureCCS:
       case Restrict(p, l) =>
         p.toString ++ " \\ " ++ " {" ++ l.mkString(", ") ++ "}"
       case Redirection(p, cs) =>
-        p.toString + "{" + cs
+        p.toString + "[" + cs
           .map((n, o) => n.toString + "/" + o.toString)
-          .mkString(", ") + "}"
+          .mkString(", ") + "]"
 
     }
 

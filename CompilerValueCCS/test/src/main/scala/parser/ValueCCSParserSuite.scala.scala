@@ -10,7 +10,7 @@ import main.scala.ast.CommonAst._
 import main.scala.ast.ValueCCS._
 import main.scala.eval.EvalAexpr.eval as evalA
 import main.scala.eval.EvalBexpr.eval as evalB
-import main.scala.lexer._
+import main.scala.parser._
 import main.scala.parser.ValueCCSParser._
 
 class ValueCCSParserSuite extends munit.FunSuite {
