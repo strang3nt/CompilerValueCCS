@@ -11,7 +11,8 @@ object ValueCCSLexer extends RegexParsers:
 
   def apply(code: String): Either[ValueCCSLexerError, List[ValueCCSToken]] = {
     parse(tokens, code) match {
-      case NoSuccess(msg, next)  => Left(ValueCCSLexerError(Location(next.pos.line, next.pos.column), msg))
+      case NoSuccess(msg, next) =>
+        Left(ValueCCSLexerError(Location(next.pos.line, next.pos.column), msg))
       case Success(result, next) => Right(result)
       case err @ _ => throw new Exception(s"CCSLexer: Fatal: $err")
     }
@@ -21,9 +22,9 @@ object ValueCCSLexer extends RegexParsers:
     phrase(
       rep1(
         integer | equals | separator | comma | out | lbracket |
-        rbracket | sum | sub | mul | div | leq | le | geq | ge | define | not | and |
-        or | par | ifStatement | thenStatement | restr | tau | identifier | curly_lbracket | curly_rbracket |
-        squared_lbracket | squared_rbracket
+          rbracket | sum | sub | mul | div | leq | le | geq | ge | define | not | and |
+          or | par | ifStatement | thenStatement | restr | tau | identifier | curly_lbracket | curly_rbracket |
+          squared_lbracket | squared_rbracket
       )
     )
   }

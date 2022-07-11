@@ -10,13 +10,21 @@ import main.scala.ast.ValueCCS.Constant
 import main.scala.eval.EvalAexpr.eval as evalA
 import main.scala.eval.EvalBexpr.eval as evalB
 import main.scala.parser.ValueCCSParser
-import main.scala.process.{PureCCSProcess, ValueCCSProcess, Constant as ProcessConstant}
+import main.scala.process.{
+  PureCCSProcess,
+  ValueCCSProcess,
+  Constant as ProcessConstant
+}
 
 import scala.collection.immutable.Map
 
 object PureCCSCompiler {
 
-  def apply(program: ValueCCSProcess, lowerBound: Int, upperInclBound: Int): List[PureCCSProcess] =
+  def apply(
+      program: ValueCCSProcess,
+      lowerBound: Int,
+      upperInclBound: Int
+  ): List[PureCCSProcess] =
     val ValueCCSProcess(name, process) = program
     val natRange = (lowerBound to upperInclBound).toSet
     name match
@@ -103,9 +111,7 @@ object PureCCSCompiler {
         P.Redirection(
           translateProcess(p, natRange, subst),
           cs.foldLeft(List.empty) { case (acc, (Channel(n), Channel(v))) =>
-            acc ++ natRange.map(i =>
-              (Channel(n + s"_$i"), Channel(v + s"_$i"))
-            )
+            acc ++ natRange.map(i => (Channel(n + s"_$i"), Channel(v + s"_$i")))
           }
         )
 

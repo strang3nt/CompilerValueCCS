@@ -20,12 +20,15 @@ import scala.util.parsing.input.{NoPosition, Position, Reader}
 object ValueCCSParser extends Parsers with PackratParsers:
   override type Elem = ValueCCSToken
 
-  class ValueCCSTokenReader(tokens: Seq[ValueCCSToken]) extends Reader[ValueCCSToken] {
+  class ValueCCSTokenReader(tokens: Seq[ValueCCSToken])
+      extends Reader[ValueCCSToken] {
     override def first: ValueCCSToken = tokens.head
     override def atEnd: Boolean = tokens.isEmpty
     override def pos: Position =
       tokens.headOption.map(_.pos).getOrElse(NoPosition)
-    override def rest: Reader[ValueCCSToken] = new ValueCCSTokenReader(tokens.tail)
+    override def rest: Reader[ValueCCSToken] = new ValueCCSTokenReader(
+      tokens.tail
+    )
   }
 
   def apply[A](
@@ -34,14 +37,18 @@ object ValueCCSParser extends Parsers with PackratParsers:
   ): Either[ValueCCSParserError, A] = {
     val reader = new PackratReader(new ValueCCSTokenReader(tokens))
     program(reader) match {
-      case NoSuccess(msg, next) => Left(ValueCCSParserError(Location(next.pos.line, next.pos.column), msg))
+      case NoSuccess(msg, next) =>
+        Left(ValueCCSParserError(Location(next.pos.line, next.pos.column), msg))
       case Success(result, next) => Right(result)
       case err @ _ => throw new Exception(s"ValueCCSParser: Fatal: $err")
     }
   }
 
-  lazy val program: PackratParser[ValueCCSProcess] = phrase(process_constant ~ DEF ~ valueCCS ^^ {
-    case c ~ _ ~ v => ValueCCSProcess(c, v)})
+  lazy val program: PackratParser[ValueCCSProcess] = phrase(
+    process_constant ~ DEF ~ valueCCS ^^ { case c ~ _ ~ v =>
+      ValueCCSProcess(c, v)
+    }
+  )
 
   lazy val valueCCS: PackratParser[ValueCCS] =
     positioned {
@@ -175,8 +182,12 @@ object ValueCCSParser extends Parsers with PackratParsers:
       small_case_identifier,
       COMMA
     ) <~ RBRACKET).? ^^ {
-      case IDENTIFIER(name) ~ None    => ProcessConstant(name, None)
-      case IDENTIFIER(name) ~ Some(l) => ProcessConstant(name, Some(l.map{ case IDENTIFIER(name) => Variable(name)}))
+      case IDENTIFIER(name) ~ None => ProcessConstant(name, None)
+      case IDENTIFIER(name) ~ Some(l) =>
+        ProcessConstant(
+          name,
+          Some(l.map { case IDENTIFIER(name) => Variable(name) })
+        )
     }
   }
 
@@ -235,10 +246,15 @@ object ValueCCSParser extends Parsers with PackratParsers:
   }
 
   lazy val redirection: PackratParser[ValueCCS] = positioned {
-    valueCCS ~ 
-      (SQUARED_LBRACKET ~> 
-        rep1sep(small_case_identifier ~ DIV ~ small_case_identifier, COMMA) 
-      <~ SQUARED_RBRACKET) ^^ { case proc ~ l =>
-      Redirection(proc, l.map { case IDENTIFIER(x) ~ _ ~ IDENTIFIER(y) => (Channel(x), Channel(y)) })
-    }
+    valueCCS ~
+      (SQUARED_LBRACKET ~>
+        rep1sep(small_case_identifier ~ DIV ~ small_case_identifier, COMMA)
+        <~ SQUARED_RBRACKET) ^^ { case proc ~ l =>
+        Redirection(
+          proc,
+          l.map { case IDENTIFIER(x) ~ _ ~ IDENTIFIER(y) =>
+            (Channel(x), Channel(y))
+          }
+        )
+      }
   }

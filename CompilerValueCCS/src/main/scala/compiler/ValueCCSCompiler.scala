@@ -12,4 +12,3 @@ object ValueCCSCompiler:
       ast <- ValueCCSParser(tokens, ValueCCSParser.program).right
     } yield ast
   }
-  

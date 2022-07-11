@@ -1,97 +1,105 @@
 package main.scala
 
+import scalafx.Includes._
+import scalafx.application.JFXApp3
+import scalafx.application.JFXApp3.PrimaryStage
+import scalafx.geometry.Insets
+import scalafx.scene.Scene
+import scalafx.scene.text.Text
+import scalafx.scene.control.ButtonBar.ButtonData
+import scalafx.scene.control._
+import scalafx.scene.layout.{GridPane, VBox}
+import scalafx.beans.property.BooleanProperty
+import scalafx.beans.property.IntegerProperty
+import scalafx.scene.layout.ColumnConstraints
+import scalafx.scene.layout.Priority
+
 import main.scala.ast.Aexpr._
 import main.scala.ast._
 import main.scala.parser.ValueCCSParser
 import main.scala.parser.ValueCCSParser.program
 import main.scala.compiler._
 import main.scala.compiler.ValueCCSCompilationError._
-import swing._
 
-class UI extends MainFrame:
-  def restrictHeight(s: Component) =
-    s.maximumSize = new Dimension(Short.MaxValue, s.preferredSize.height)
+object Main extends JFXApp3:
+  override def start(): Unit =
+    stage = new PrimaryStage:
+      scene = new Scene:
+        title = "CCS Value Passing compiler to CCS"
 
-  title = "Compiler CCS Value Passing into CCS"
-  
-  def newField: TextField = new TextField {
-    text = "0"
-    columns = 5
-    horizontalAlignment = Alignment.Right
-  }
+        root = new VBox:
+          val report = new TextArea {
+            text = "CCS VP translated"
+            wrapText = true
+            disable = true
+          }
+          val valueCCSString = new TextField() {
+            promptText = "CCS Value Passing string"
+          }
+          val isLBint = BooleanProperty(false)
+          val isUBint = BooleanProperty(false)
+          val ubValue = IntegerProperty(-1)
+          val lbValue = IntegerProperty(-1)
 
-  val ccs_vp_program = newField
-  val ccs_translate_err = new TextPane { visible = false; editable = false; }
-  val lowerBound = newField
-  val upperBound = newField
-  val upper_bound_err = new TextPane { visible = false; editable = false; }
+          val lowerBound = new TextField() { promptText = "Lower Bound" }
+          lowerBound.text.onChange { (_, _, n) =>
+            isLBint.update(n.toIntOption match
+              case Some(x) => lbValue.update(x); x >= 0
+              case None    => false
+            )
+          }
 
-  val commentField = new TextArea { rows = 8; lineWrap = true; wordWrap = true; editable = false; }
+          val upperBound = new TextField() { promptText = "Upper Bound" }
+          upperBound.text.onChange { (_, _, n) =>
+            isUBint.update(n.toIntOption match
+              case Some(x) => ubValue.update(x); x >= 0
+              case None    => false
+            )
+          }
+          val compileButton = new Button("Compile"):
+            disable = true
+            onAction = _ =>
+              compileValueCCS(
+                valueCCSString.text.value,
+                lowerBound.text.value.toInt,
+                upperBound.text.value.toInt
+              ) match
+                case Right(r) => report.text = r
+                case Left(e)  => report.text = e.toString
+          val prop = BooleanProperty(false)
+          prop <== isUBint && isLBint && (lbValue <= ubValue)
+          prop.onChange { (_, _, n) =>
+            println(n);
+            if (n) { compileButton.disable = false }
+            else compileButton.disable = true
+          }
 
-  restrictHeight(ccs_vp_program)
-
-  contents = new BoxPanel(Orientation.Vertical) {
-    contents += new BoxPanel(Orientation.Horizontal) {
-      contents += new Label("CCS Value Passing Program:")
-      contents += Swing.HStrut(5)
-      contents += ccs_vp_program
-      contents += Swing.HStrut(5)
-      contents += ccs_translate_err
-    }
-    contents += new BoxPanel(Orientation.Horizontal) {
-      contents += new Label("Number set lower bound:")
-      contents += Swing.HStrut(5)
-      contents += lowerBound
-    }
-    contents += new BoxPanel(Orientation.Horizontal) {
-      contents += new Label("Number set upper bound:")
-      contents += Swing.HStrut(5)
-      contents += upperBound
-      contents += Swing.HStrut(5)
-      contents += upper_bound_err
-    }
-    contents += Swing.VStrut(5)
-    contents += new Label("Result")
-    contents += Swing.VStrut(3)
-    contents += new ScrollPane(commentField)
-    contents += Swing.VStrut(5)
-    contents += new BoxPanel(Orientation.Horizontal) {
-      contents += Button("Compile") { compileValueCCS() }
-    }
-    for (e <- contents)
-      e.xLayoutAlignment = 0.0
-    border = Swing.EmptyBorder(10, 10, 10, 10)
-  }
-
-  def compileValueCCS() =
-    println("Get value passing CCS program")
-    val v = ccs_vp_program.text
-    val proc = ValueCCSCompiler(v)
-    println("Get size of number set")
-    val u = Integer.parseUnsignedInt(upperBound.text)
-    val l = Integer.parseUnsignedInt(lowerBound.text)
-    println("Checking if bounds are correct")
-    
-    if l > l then
-        upper_bound_err.text = "Upper bound should be >= than lower bound"
-        upper_bound_err.foreground = java.awt.Color.RED
-        upper_bound_err.visible = true
-    else
-      proc match
-        case Right(valueCCS) =>
-          val result = PureCCSCompiler(valueCCS, l, u).mkString("\n")
-          println(result)
-          commentField.text = result
-        case Left(ValueCCSParserError(Location(_, y), msg) ) =>
-          ccs_translate_err.text = s"Parsing error at column ${y} with message: ${msg}"
-          ccs_translate_err.foreground = java.awt.Color.RED
-          ccs_translate_err.visible = true
-        case Left(ValueCCSLexerError(Location(_, y), msg)) =>
-          ccs_translate_err.text = s"Lexer error at column ${y} with message: ${msg}"
-          ccs_translate_err.foreground = java.awt.Color.RED
-          ccs_translate_err.visible = true
-
-object Main extends App:
-
-  val ui = new UI
-  ui.visible = true
+          val grid = new GridPane():
+            hgap = 10
+            vgap = 10
+            padding = Insets(20, 20, 10, 10)
+            add(new Label("CCS Value Passing program:"), 0, 0)
+            add(valueCCSString, 1, 0)
+            add(new Label("Lower Bound:"), 0, 1)
+            add(lowerBound, 1, 1)
+            add(new Label("Upper Bound:"), 0, 2)
+            add(upperBound, 1, 2)
+            add(compileButton, 1, 3)
+            add(report, 0, 4)
+          val alwaysGrow = new ColumnConstraints() { hgrow = Priority.Always }
+          val neverGrow = new ColumnConstraints() { hgrow = Priority.Never }
+          grid.getColumnConstraints().addAll(neverGrow, alwaysGrow);
+          children = Seq(
+            grid,
+            report
+          )
+          padding = Insets(top = 24, right = 64, bottom = 24, left = 64)
+          fillWidth = true
+def compileValueCCS(
+    ccs_vp: String,
+    lb: Int,
+    ub: Int
+): Either[ValueCCSCompilationError, String] =
+  ValueCCSCompiler(ccs_vp) match
+    case Right(r) => Right(PureCCSCompiler(r, lb, ub).mkString("\n"))
+    case Left(r)  => Left(r)
