@@ -1,0 +1,36 @@
+---
+title: CompilerValueCCS, a compiler for Value Passing CCS into Pure CCS
+
+abstract: |
+  Given a program written using Value Passing CCS CompilerValueCCS translates it into the pure version of CCS
+
+author: Alessandro Flori
+
+date: 30 June, 2022
+
+institute:
+  - Department of Mathematics "Tullio Levi-Civita"
+
+theme: Madrid
+
+colortheme: beaver
+
+logo: img/unipd-logo
+
+fontsize: 12pt
+
+logosetup:
+  - width=6em
+
+titlegraphic: img/unipd-logo
+
+titlegraphicsetup:
+  - width=8em
+
+colorlinks: true
+
+link-citations: true
+
+nocite: '@*'
+
+...

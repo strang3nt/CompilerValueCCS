@@ -1,0 +1,24 @@
+---
+from: markdown
+
+to: beamer
+
+output-file: compilerValueCCS_docs.pdf
+
+input-file: docs.md
+
+metadata-file: metadata.yaml
+
+template: default.latex
+
+citeproc: true
+
+bibliography: references.bib
+
+csl: https://www.zotero.org/styles/ieee
+
+resource-path:
+  - .
+  - ${.}/img
+
+...
