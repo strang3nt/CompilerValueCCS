@@ -6,8 +6,8 @@ import main.scala.parser.ValueCCSParser
 class ValueCCSCompilerSuite extends munit.FunSuite:
   test("Program: K(x) = 'kr(x).K + kw(y).K(y)") {
     val ast = for {
-      tokens <- ValueCCSLexer("K(x) = 'kr(x).K + kw(y).K(y)").right
-      ast <- ValueCCSParser(tokens, ValueCCSParser.program).right
+      tokens <- ValueCCSLexer("K(x) = 'kr(x).K + kw(y).K(y)")
+      ast <- ValueCCSParser(tokens, ValueCCSParser.program)
     } yield ast
     ast match {
       case Right(valid) => 

@@ -8,7 +8,7 @@ import main.scala.process.ValueCCSProcess
 object ValueCCSCompiler:
   def apply(code: String): Either[ValueCCSCompilationError, ValueCCSProcess] = {
     for {
-      tokens <- ValueCCSLexer(code).right
-      ast <- ValueCCSParser(tokens, ValueCCSParser.program).right
+      tokens <- ValueCCSLexer(code)
+      ast <- ValueCCSParser(tokens, ValueCCSParser.program)
     } yield ast
   }

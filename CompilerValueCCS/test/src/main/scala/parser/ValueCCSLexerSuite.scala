@@ -5,7 +5,7 @@ class CCSLexerSuite extends munit.FunSuite {
       val valueCCSstring = "K(x)='kr(x) | kc"
       val aexprString = "5+2*3-4"
       for {
-        tokens0 <- ValueCCSLexer(valueCCSstring).right
+        tokens0 <- ValueCCSLexer(valueCCSstring)
       }
 
       assertEquals(
@@ -14,7 +14,7 @@ class CCSLexerSuite extends munit.FunSuite {
           DEF, OUT, IDENTIFIER("kr"), LBRACKET, IDENTIFIER("x"), RBRACKET,
           PAR, IDENTIFIER("kc")))
       for {
-        tokens1 <- ValueCCSLexer(aexprString).right
+        tokens1 <- ValueCCSLexer(aexprString)
       }
       assertEquals(
         tokens1,

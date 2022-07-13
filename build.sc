@@ -9,13 +9,16 @@ object CompilerValueCCS extends ScalaModule with ScalafmtModule {
     )
   }
 
-  // Add dependency on JavaFX libraries
   val javaFXVersion  = "18.0.1"
   val scalaFXVersion = "18.0.1-R27"
   val javaFXModules  = List("base", "controls", "fxml", "graphics", "media", "swing", "web")
     .map(m => ivy"org.openjfx:javafx-$m:$javaFXVersion")
 
-  
+  def scalacOptions = Seq(
+      "-deprecation",
+      "-feature"
+  )
+
   def ivyDeps = Agg(
       ivy"org.scalafx::scalafx:$scalaFXVersion",
       ivy"org.scala-lang.modules::scala-parser-combinators:2.1.1"

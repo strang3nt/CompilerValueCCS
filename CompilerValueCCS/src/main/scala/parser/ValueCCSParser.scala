@@ -191,65 +191,66 @@ object ValueCCSParser extends Parsers with PackratParsers:
     }
   }
 
-  lazy val inputCh: PackratParser[ValueCCS] = positioned {
+  lazy val inputCh: Parser[ValueCCS] = positioned {
     small_case_identifier ~
       (LBRACKET ~> small_case_identifier <~ RBRACKET).? ~
-      (SEPARATOR ~> (outputCh | constant | tauCh | inputCh | (LBRACKET ~> (sum | par | restrict) <~ RBRACKET))) ^^ {
+      (SEPARATOR ~> (outputCh | constant | tauCh | inputCh | (LBRACKET ~> (sum | par | restrict | redirection) <~ RBRACKET))) ^^ {
         case IDENTIFIER(ch) ~ Some(IDENTIFIER(name)) ~ proc =>
           InputCh(Channel(ch), Some(Variable(name)), proc)
         case IDENTIFIER(ch) ~ None ~ proc => InputCh(Channel(ch), None, proc)
       }
   }
 
-  lazy val outputCh: PackratParser[ValueCCS] = positioned {
+  lazy val outputCh: Parser[ValueCCS] = positioned {
     OUT ~> small_case_identifier ~
       (LBRACKET ~> aexpr <~ RBRACKET).? ~
-      (SEPARATOR ~> (outputCh | constant | tauCh | inputCh | (LBRACKET ~> (sum | par | restrict) <~ RBRACKET))) ^^ {
+      (SEPARATOR ~> (outputCh | constant | tauCh | inputCh | (LBRACKET ~> (sum | par | restrict | redirection) <~ RBRACKET))) ^^ {
         case IDENTIFIER(name) ~ e ~ proc => OutputCh(Channel(name), e, proc)
       }
   }
 
-  lazy val tauCh: PackratParser[ValueCCS] = positioned {
+  lazy val tauCh: Parser[ValueCCS] = positioned {
     tau ~
-      (SEPARATOR ~> (outputCh | constant | tauCh | inputCh | (LBRACKET ~> (sum | par | restrict) <~ RBRACKET))) ^^ {
+      (SEPARATOR ~> (outputCh | constant | tauCh | inputCh | (LBRACKET ~> (sum | par | restrict | redirection) <~ RBRACKET))) ^^ {
         case in ~ proc =>
-          InputCh(in, None, proc)
+          TauCh(in, None, proc)
       }
   }
 
   def ifThen = positioned {
-    ((IF ~ LBRACKET) ~> bexpr <~ RBRACKET) ~ (THEN ~> valueCCS) ^^ {
-      case b ~ proc => IfThen(b, proc)
+    IF ~> bexpr ~ (THEN ~> (outputCh | constant | tauCh | inputCh | (LBRACKET ~> (sum | par | restrict | redirection) <~ RBRACKET))) ^^ { case b ~ proc =>
+      IfThen(b, proc)
     }
   }
 
   lazy val par: PackratParser[ValueCCS] = positioned {
-    (sum | restrict | outputCh | inputCh | tauCh | constant | ifThen) ~ (PAR ~> valueCCS) ^^ {
+    (sum | restrict | redirection | outputCh | inputCh | tauCh | constant | ifThen) ~ (PAR ~> valueCCS) ^^ {
       case l ~ r => Par(l, r)
     }
   }
 
   lazy val sum: PackratParser[ValueCCS] = positioned {
-    (par | restrict | outputCh | inputCh | tauCh | constant | ifThen) ~ (SUM ~> (par | restrict | outputCh | inputCh | tauCh | constant | ifThen)).+ ^^ {
+    (par | restrict | redirection | outputCh | inputCh | tauCh | constant | ifThen) ~ (SUM ~> valueCCS).+ ^^ {
       case p ~ q => Sum(p :: q)
     } |
       integer ^^ { case INTEGER(0) => Sum(List.empty) }
   }
 
   lazy val restrict: PackratParser[ValueCCS] = positioned {
-    valueCCS ~ ((RESTR ~ CURLY_LBRACKET) ~> rep1sep(
+    LBRACKET ~ valueCCS ~ RBRACKET ~ ((RESTR ~ CURLY_LBRACKET) ~> rep1sep(
       small_case_identifier,
       COMMA
-    ) <~ CURLY_RBRACKET) ^^ { case proc ~ l =>
-      Restrict(proc, l.map { case IDENTIFIER(name) => Channel(name) })
+    ) <~ CURLY_RBRACKET) ^^ { 
+      case _ ~ proc ~_ ~ l =>
+        Restrict(proc, l.map { case IDENTIFIER(name) => Channel(name) })
     }
   }
 
   lazy val redirection: PackratParser[ValueCCS] = positioned {
-    valueCCS ~
+    LBRACKET ~ valueCCS ~ RBRACKET ~
       (SQUARED_LBRACKET ~>
         rep1sep(small_case_identifier ~ DIV ~ small_case_identifier, COMMA)
-        <~ SQUARED_RBRACKET) ^^ { case proc ~ l =>
+        <~ SQUARED_RBRACKET) ^^ { case _ ~ proc~_ ~ l =>
         Redirection(
           proc,
           l.map { case IDENTIFIER(x) ~ _ ~ IDENTIFIER(y) =>

@@ -17,8 +17,8 @@ class ValueCCSParserSuite extends munit.FunSuite {
   test("aexpr") {
 
     val ast = for {
-      tokens <- ValueCCSLexer("5+24*3-4").right
-      ast <- ValueCCSParser(tokens, phrase(ValueCCSParser.aexpr)).right
+      tokens <- ValueCCSLexer("5+24*3-4")
+      ast <- ValueCCSParser(tokens, phrase(ValueCCSParser.aexpr))
     } yield ast
     assertEquals(
       ast.getOrElse("Mistake"),
@@ -34,8 +34,8 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("constant") {
     val ast = for {
-      tokens <- ValueCCSLexer("Kr(x)").right
-      ast <- ValueCCSParser(tokens, ValueCCSParser.constant).right
+      tokens <- ValueCCSLexer("Kr(x)")
+      ast <- ValueCCSParser(tokens, ValueCCSParser.constant)
     } yield ast
     assertEquals(
       ast.getOrElse(""),
@@ -48,8 +48,8 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("inputch") {
     val ast = for {
-      tokens <- ValueCCSLexer("kr(x).K").right
-      ast <- ValueCCSParser(tokens, ValueCCSParser.inputCh).right
+      tokens <- ValueCCSLexer("kr(x).K")
+      ast <- ValueCCSParser(tokens, ValueCCSParser.inputCh)
     } yield ast
     assertEquals(
       ast.getOrElse("Error"),
@@ -59,19 +59,19 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("tauch") {
     val ast = for {
-      tokens <- ValueCCSLexer("tau.K").right
-      ast <- ValueCCSParser(tokens, ValueCCSParser.tauCh).right
+      tokens <- ValueCCSLexer("tau.K")
+      ast <- ValueCCSParser(tokens, ValueCCSParser.tauCh)
     } yield ast
     assertEquals(
       ast.getOrElse("Error"),
-      InputCh(Tau(), None, Constant("K", None))
+      TauCh(Tau(), None, Constant("K", None))
     )
   }
 
   test("outputch") {
     val ast = for {
-      tokens <- ValueCCSLexer("'kr(1).K").right
-      ast <- ValueCCSParser(tokens, phrase(ValueCCSParser.outputCh)).right
+      tokens <- ValueCCSLexer("'kr(1).K")
+      ast <- ValueCCSParser(tokens, phrase(ValueCCSParser.outputCh))
     } yield ast
     assertEquals(
       ast.getOrElse("Error"),
@@ -85,31 +85,19 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("ifthen") {
     val ast = for {
-      tokens <- ValueCCSLexer("if (1 > 2) then K").right
-      ast <- ValueCCSParser(tokens, ValueCCSParser.ifThen).right
+      tokens <- ValueCCSLexer("if x >= 2 then takes(y) . C(x - y) + leaves(y) . C(y)")
+      ast <- ValueCCSParser(tokens, ValueCCSParser.ifThen)
+      
     } yield ast
     assertEquals(
       ast.getOrElse("Error"),
-      IfThen(
-        BoolBinOp(
-          BoolExpr(
-            ExprBinOp(
-              Expr(Term(NUMBER(Natural(1)), Nil), Nil),
-              Ge,
-              Expr(Term(NUMBER(Natural(2)), Nil), Nil)
-            )
-          ),
-          Nil
-        ),
-        Constant("K", None)
-      )
-    )
+      "Hello")
   }
 
   test("par") {
     val ast = for {
-      tokens <- ValueCCSLexer("K | K").right
-      ast <- ValueCCSParser(tokens, ValueCCSParser.par).right
+      tokens <- ValueCCSLexer("K | K")
+      ast <- ValueCCSParser(tokens, ValueCCSParser.par)
     } yield ast
     assertEquals(
       ast.getOrElse("Error"),
@@ -119,8 +107,8 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("sum") {
     val ast = for {
-      tokens <- ValueCCSLexer("K + K").right
-      ast <- ValueCCSParser(tokens, ValueCCSParser.sum).right
+      tokens <- ValueCCSLexer("K + K")
+      ast <- ValueCCSParser(tokens, ValueCCSParser.sum)
     } yield ast
     assertEquals(
       ast.getOrElse("Error"),
@@ -130,8 +118,8 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("restrict") {
     val ast = for {
-      tokens <- ValueCCSLexer("K\\{y}").right
-      ast <- ValueCCSParser(tokens, ValueCCSParser.restrict).right
+      tokens <- ValueCCSLexer("(K)\\{y}")
+      ast <- ValueCCSParser(tokens, ValueCCSParser.restrict)
     } yield ast
     assertEquals(
       ast.getOrElse("Error"),
@@ -141,8 +129,8 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("valueCCS") {
     val ast = for {
-      tokens <- ValueCCSLexer("'kr(x).K|kw(y).K(y)").right
-      ast <- ValueCCSParser(tokens, ValueCCSParser.valueCCS).right
+      tokens <- ValueCCSLexer("'kr(x).K|kw(y).K(y)")
+      ast <- ValueCCSParser(tokens, ValueCCSParser.valueCCS)
     } yield ast
     assertEquals(
       ast.getOrElse("Error"),

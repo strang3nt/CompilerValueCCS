@@ -12,6 +12,10 @@ enum ValueCCS extends Positional:
     this match {
       case Constant(name, l) =>
         name ++ l.map { "(" ++ _.mkString(", ") ++ ")" }.getOrElse("")
+      case TauCh(c, v, p) =>
+        c.toString ++ v
+          .map { "(" ++ _.toString ++ ")" }
+          .getOrElse("") ++ " . " ++ p.toString
       case InputCh(c, v, p) =>
         c.toString ++ v
           .map { "(" ++ _.toString ++ ")" }
@@ -34,7 +38,8 @@ enum ValueCCS extends Positional:
     }
 
   case Constant(name: String, l: Option[List[Aexpr]])
-  case InputCh(c: Channel | Tau, v: Option[Variable], p: ValueCCS)
+  case TauCh(c: Tau, v: Option[Variable], p: ValueCCS)
+  case InputCh(c: Channel, v: Option[Variable], p: ValueCCS)
   case OutputCh(c: Channel, e: Option[Aexpr], p: ValueCCS)
   case IfThen(b: Bexpr, p: ValueCCS)
   case Par(left: ValueCCS, right: ValueCCS)

@@ -10,7 +10,7 @@ extension (x: Natural)
   // arithmetic operators
   def +(y: Natural): Natural = x + y
   def -(y: Natural): Natural =
-    assert((x - y) > 0); x - y
+    assert((x - y) >= 0); x - y
   def *(y: Natural): Natural = x * y
   def /(y: Natural): Natural = x / y
 
