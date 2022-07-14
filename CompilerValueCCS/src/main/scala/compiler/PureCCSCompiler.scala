@@ -25,11 +25,11 @@ object PureCCSCompiler:
       lowerBound: Int,
       upperInclBound: Int
   ): List[PureCCSProcess] =
-    val ValueCCSProcess(name, process) = program
+    val (name, process) = program match { case ValueCCSProcess(name, process) => (name, process) }
     val natRange = (lowerBound to upperInclBound).toSet
     name match
       case ProcessConstant(n, Some(l)) =>
-        var substCombinations: List[List[Natural]] =
+        val substCombinations: List[List[Natural]] =
           (List
             .fill(l.length)(natRange))
             .flatten

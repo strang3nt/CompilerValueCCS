@@ -191,10 +191,14 @@ object ValueCCSParser extends Parsers with PackratParsers:
     }
   }
 
+  lazy val valueCCSParenthesis: Parser[ValueCCS] = 
+    outputCh | constant | tauCh | inputCh | ifThen |
+    (LBRACKET ~> (sum | par | restrict | redirection) <~ RBRACKET)
+
   lazy val inputCh: Parser[ValueCCS] = positioned {
     small_case_identifier ~
       (LBRACKET ~> small_case_identifier <~ RBRACKET).? ~
-      (SEPARATOR ~> (outputCh | constant | tauCh | inputCh | (LBRACKET ~> (sum | par | restrict | redirection) <~ RBRACKET))) ^^ {
+      (SEPARATOR ~> valueCCSParenthesis) ^^ {
         case IDENTIFIER(ch) ~ Some(IDENTIFIER(name)) ~ proc =>
           InputCh(Channel(ch), Some(Variable(name)), proc)
         case IDENTIFIER(ch) ~ None ~ proc => InputCh(Channel(ch), None, proc)
@@ -204,21 +208,21 @@ object ValueCCSParser extends Parsers with PackratParsers:
   lazy val outputCh: Parser[ValueCCS] = positioned {
     OUT ~> small_case_identifier ~
       (LBRACKET ~> aexpr <~ RBRACKET).? ~
-      (SEPARATOR ~> (outputCh | constant | tauCh | inputCh | (LBRACKET ~> (sum | par | restrict | redirection) <~ RBRACKET))) ^^ {
+      (SEPARATOR ~> valueCCSParenthesis) ^^ {
         case IDENTIFIER(name) ~ e ~ proc => OutputCh(Channel(name), e, proc)
       }
   }
 
   lazy val tauCh: Parser[ValueCCS] = positioned {
     tau ~
-      (SEPARATOR ~> (outputCh | constant | tauCh | inputCh | (LBRACKET ~> (sum | par | restrict | redirection) <~ RBRACKET))) ^^ {
+      (SEPARATOR ~> valueCCSParenthesis) ^^ {
         case in ~ proc =>
           TauCh(in, None, proc)
       }
   }
 
   def ifThen = positioned {
-    IF ~> bexpr ~ (THEN ~> (outputCh | constant | tauCh | inputCh | (LBRACKET ~> (sum | par | restrict | redirection) <~ RBRACKET))) ^^ { case b ~ proc =>
+    IF ~> bexpr ~ (THEN ~> valueCCSParenthesis) ^^ { case b ~ proc =>
       IfThen(b, proc)
     }
   }
@@ -237,25 +241,24 @@ object ValueCCSParser extends Parsers with PackratParsers:
   }
 
   lazy val restrict: PackratParser[ValueCCS] = positioned {
-    LBRACKET ~ valueCCS ~ RBRACKET ~ ((RESTR ~ CURLY_LBRACKET) ~> rep1sep(
+    valueCCSParenthesis ~ ((RESTR ~ CURLY_LBRACKET) ~> rep1sep(
       small_case_identifier,
       COMMA
     ) <~ CURLY_RBRACKET) ^^ { 
-      case _ ~ proc ~_ ~ l =>
+      case proc ~ l =>
         Restrict(proc, l.map { case IDENTIFIER(name) => Channel(name) })
     }
   }
 
   lazy val redirection: PackratParser[ValueCCS] = positioned {
-    LBRACKET ~ valueCCS ~ RBRACKET ~
-      (SQUARED_LBRACKET ~>
-        rep1sep(small_case_identifier ~ DIV ~ small_case_identifier, COMMA)
-        <~ SQUARED_RBRACKET) ^^ { case _ ~ proc~_ ~ l =>
-        Redirection(
-          proc,
-          l.map { case IDENTIFIER(x) ~ _ ~ IDENTIFIER(y) =>
-            (Channel(x), Channel(y))
-          }
-        )
-      }
+    valueCCSParenthesis ~ (SQUARED_LBRACKET ~>
+      rep1sep(small_case_identifier ~ DIV ~ small_case_identifier, COMMA)
+      <~ SQUARED_RBRACKET) ^^ { case proc ~ l =>
+      Redirection(
+        proc,
+        l.map { case IDENTIFIER(x) ~ _ ~ IDENTIFIER(y) =>
+          (Channel(x), Channel(y))
+        }
+      )
+    }
   }

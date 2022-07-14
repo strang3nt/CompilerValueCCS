@@ -8,7 +8,7 @@ import scala.util.parsing.input.Positional
 final case class Constant(name: String, l: Option[List[Variable]])
     extends Positional:
   override def toString: String =
-    var vs =
+    val vs =
       l match
         case Some(vs) => "(" + vs.mkString(", ") + ")"
         case None     => ""

@@ -85,13 +85,25 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("ifthen") {
     val ast = for {
-      tokens <- ValueCCSLexer("if x >= 2 then takes(y) . C(x - y) + leaves(y) . C(y)")
+      tokens <- ValueCCSLexer("if 1 > 2 then K")
       ast <- ValueCCSParser(tokens, ValueCCSParser.ifThen)
-      
     } yield ast
     assertEquals(
       ast.getOrElse("Error"),
-      "Hello")
+      IfThen(
+        BoolBinOp(
+          BoolExpr(
+            ExprBinOp(
+              Expr(Term(NUMBER(Natural(1)), Nil), Nil),
+              Ge,
+              Expr(Term(NUMBER(Natural(2)), Nil), Nil)
+            )
+          ),
+          Nil
+        ),
+        Constant("K", None)
+      )
+    )
   }
 
   test("par") {
@@ -118,7 +130,7 @@ class ValueCCSParserSuite extends munit.FunSuite {
 
   test("restrict") {
     val ast = for {
-      tokens <- ValueCCSLexer("(K)\\{y}")
+      tokens <- ValueCCSLexer("K \\ {y}")
       ast <- ValueCCSParser(tokens, ValueCCSParser.restrict)
     } yield ast
     assertEquals(
