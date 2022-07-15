@@ -18,18 +18,20 @@ import main.scala.process.{
 
 import scala.collection.immutable.Map
 
-object PureCCSCompiler {
+object PureCCSCompiler:
 
   def apply(
       program: ValueCCSProcess,
       lowerBound: Int,
       upperInclBound: Int
   ): List[PureCCSProcess] =
-    val ValueCCSProcess(name, process) = program
+    val (name, process) = program match {
+      case ValueCCSProcess(name, process) => (name, process)
+    }
     val natRange = (lowerBound to upperInclBound).toSet
     name match
       case ProcessConstant(n, Some(l)) =>
-        var substCombinations: List[List[Natural]] =
+        val substCombinations: List[List[Natural]] =
           (List
             .fill(l.length)(natRange))
             .flatten
@@ -76,14 +78,13 @@ object PureCCSCompiler {
       case V.InputCh(Channel(n), None, p) =>
         P.InputCh(Channel(n), translateProcess(p, natRange, subst))
 
-      case V.InputCh(Tau(), _, p) =>
-        P.InputCh(Tau(), translateProcess(p, natRange, subst))
+      case V.TauCh(p) =>
+        P.TauCh(translateProcess(p, natRange, subst))
 
       case V.OutputCh(Channel(n), Some(e), p) =>
         val r = evalA(e, subst)
         P.OutputCh(Channel(n + s"_$r"), translateProcess(p, natRange, subst))
 
-      // TODO: check if field can be empty
       case V.OutputCh(Channel(n), None, p) =>
         P.OutputCh(Channel(n), translateProcess(p, natRange, subst))
 
@@ -119,5 +120,3 @@ object PureCCSCompiler {
         translateProcess(p, natRange, subst)
       case V.IfThen(_, _) => // if evalB(b, subst) == false
         P.Sum(List.empty)
-
-}

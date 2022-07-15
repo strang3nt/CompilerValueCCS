@@ -30,7 +30,7 @@ object ValueCCSLexer extends RegexParsers:
   }
 
   def identifier: Parser[IDENTIFIER] = positioned {
-    "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ (IDENTIFIER(_))
+    "[a-zA-Z][a-zA-Z0-9_]*".r ^^ (IDENTIFIER(_))
   }
   def integer: Parser[INTEGER] = positioned {
     """[1-9]\d*""".r ^^ (i => INTEGER(i.toInt))

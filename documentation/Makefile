@@ -1,4 +1,4 @@
-CONTENT = slides.md
+CONTENT = docs.md
 
 all: $(CONTENT)
 	pandoc -d default.yaml
