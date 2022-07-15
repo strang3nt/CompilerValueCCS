@@ -90,4 +90,4 @@ object Main extends JFXApp3:
         root = new VBox:
           fillWidth = true
           padding = Insets(top = 24, right = 64, bottom = 24, left = 64)
-          children = List( grid, report)
+          children = List(grid, report)

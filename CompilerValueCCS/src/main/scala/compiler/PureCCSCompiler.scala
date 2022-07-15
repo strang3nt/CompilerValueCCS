@@ -25,7 +25,9 @@ object PureCCSCompiler:
       lowerBound: Int,
       upperInclBound: Int
   ): List[PureCCSProcess] =
-    val (name, process) = program match { case ValueCCSProcess(name, process) => (name, process) }
+    val (name, process) = program match {
+      case ValueCCSProcess(name, process) => (name, process)
+    }
     val natRange = (lowerBound to upperInclBound).toSet
     name match
       case ProcessConstant(n, Some(l)) =>
@@ -76,8 +78,8 @@ object PureCCSCompiler:
       case V.InputCh(Channel(n), None, p) =>
         P.InputCh(Channel(n), translateProcess(p, natRange, subst))
 
-      case V.TauCh(_, _, p) =>
-        P.InputCh(Tau(), translateProcess(p, natRange, subst))
+      case V.TauCh(p) =>
+        P.TauCh(translateProcess(p, natRange, subst))
 
       case V.OutputCh(Channel(n), Some(e), p) =>
         val r = evalA(e, subst)

@@ -191,9 +191,9 @@ object ValueCCSParser extends Parsers with PackratParsers:
     }
   }
 
-  lazy val valueCCSParenthesis: Parser[ValueCCS] = 
+  lazy val valueCCSParenthesis: Parser[ValueCCS] =
     outputCh | constant | tauCh | inputCh | ifThen |
-    (LBRACKET ~> (sum | par | restrict | redirection) <~ RBRACKET)
+      (LBRACKET ~> (sum | par | restrict | redirection) <~ RBRACKET)
 
   lazy val inputCh: Parser[ValueCCS] = positioned {
     small_case_identifier ~
@@ -215,9 +215,8 @@ object ValueCCSParser extends Parsers with PackratParsers:
 
   lazy val tauCh: Parser[ValueCCS] = positioned {
     tau ~
-      (SEPARATOR ~> valueCCSParenthesis) ^^ {
-        case in ~ proc =>
-          TauCh(in, None, proc)
+      (SEPARATOR ~> valueCCSParenthesis) ^^ { case _ ~ proc =>
+        TauCh(proc)
       }
   }
 
@@ -244,9 +243,8 @@ object ValueCCSParser extends Parsers with PackratParsers:
     valueCCSParenthesis ~ ((RESTR ~ CURLY_LBRACKET) ~> rep1sep(
       small_case_identifier,
       COMMA
-    ) <~ CURLY_RBRACKET) ^^ { 
-      case proc ~ l =>
-        Restrict(proc, l.map { case IDENTIFIER(name) => Channel(name) })
+    ) <~ CURLY_RBRACKET) ^^ { case proc ~ l =>
+      Restrict(proc, l.map { case IDENTIFIER(name) => Channel(name) })
     }
   }
 

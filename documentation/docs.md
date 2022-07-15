@@ -4,13 +4,12 @@
 
 # Value Passing CCS Ast
 
+\small
 ```scala
 enum ValueCCS:
   case Constant(name: String, l: Option[List[Aexpr]])
-  case InputCh(
-    c: Channel | Tau, 
-    v: Option[Variable], 
-    p: ValueCCS)
+  case TauCh(p: ValueCCS)
+  case InputCh(c: Channel, v: Option[Variable], p: ValueCCS)
   case OutputCh(c: Channel, e: Option[Aexpr], p: ValueCCS)
   case IfThen(b: Bexpr, p: ValueCCS)
   case Par(left: ValueCCS, right: ValueCCS)
@@ -18,12 +17,13 @@ enum ValueCCS:
   case Restrict(p: ValueCCS, l: List[Channel])
   case Redirection(p: ValueCCS, cs: List[(Channel, Channel)])
 ```
+\normalsize
 
 # Value Passing CCS Grammar
 
 e ::= e + e | e * e | n | ... \
 b ::= e < e | e != e | b && b | ... \
-
+\
 P, Q ::= $\sum_{i\in I}P$ \
 | $P\ |\ Q$ \
 | $P\backslash L$ \
@@ -32,7 +32,7 @@ P, Q ::= $\sum_{i\in I}P$ \
 | $a(x).P$ \
 | $'a(e).P$ \
 | $\tau.P$ \
-
+\
 The parser handles things slightly differently
 
 # The parser
@@ -40,45 +40,58 @@ The parser handles things slightly differently
 Packrat Parsers:
 
   - needed left recursion
-  - a DSL tighly integrated with Scala.
+  - a DSL tightly integrated with Scala.
 
 # The _actual_ grammar
 
-Avoid left recursion:
+```xml
+<id>     ::= [a-zA-Z][a-zA-Z0-9_]
+<Id>     ::= [a-z][a-zA-Z0-9_]
+<number> ::= [1-9]\d*
+```
 
-id ::= _any string starting with lower case char_ \
-Id ::= _any string starting with big case char_ \
-\
-expr ::= term [ ("+" | "-") term ]* \
-term ::= factor [ ("*" | "/") factor]* \
-factor ::= "(" expr ")" | id | NUMBER \
-\
-boolbinop ::= term [(&& | ||) term]* \
-term ::= "!" boolbinop | exprbinop | "(" boolbinop ")" \
-exprbinop ::= aexpr (< | > | ...) aexpr \
+Boolean and arithmetic expressions grammar avoid left recursion:
+
+```xml
+<expr>      ::= <term> [("+" | "-") <term> ]*
+<term>      ::= <factor> [("*" | "/") <factor>]*
+<factor>    ::= "(" <expr> ")" | <id> | <number>
+
+<boolbinop> ::= <term> ("&&" | "||") <term>]*
+<term>      ::= "!" <boolbinop> | <exprbinop> 
+              | "(" <boolbinop> ")"
+<exprbinop> ::= <expr> ("<" | ">" | ...) <expr>
+```
 
 ---------------
 
-## The grammar the parser actually understands
+\small
+```xml
+<const>  ::= <Id>( <expr>* ) | <Id>
+<inch>   ::= <id> "(" <id> ")" "." <P> | <id> "." <Ppar>
+<outch>  ::= "'" <id> "(" <expr> ")" "." <Ppar>
+<tauch>  ::= "tau" "." <Ppar>
+<ifthen> ::= "if" "(" <boolbinop> ")" "then" <PPar>
+<sum>    ::= ( <par> | <rest> | <inch> | ... ) ("+" <P>)+
+<par>    ::= (<sum> | <restr> | <inch> | ... ) "|" <P>
+<restr>  ::= <Ppar> "{" ( <id>* ) "}"
+<redr>   ::= <Ppar> "[" (<id> "/" <id>)* "]"
 
-Sum ::= ( Par | Rest | InputCh | ... ) ("+" P)+ \
-Par ::=  (Sum | Restr | InputCh | ... ) "|" P \
-Restr ::= P "{" () "}" \
-Const ::= Id($e_1$,...,$e_h$) | Id \
-InputCh ::= id "(" id ")" "." P | id "." P \
-OutputCh ::= "'"id "(" expr ")" "." P \
-TauCh ::= "tau" "." P \
-IfThen ::= "if" "(" boolbinop ")" "then" P \
-Relabel ::= P "[" (id "/" id)* "]" \
-\
-P ::= Sum | Par | Restr | InputCh | ... \
+<Ppar>    ::= <outch> | <const> | <tauch> | <inch> | <ifthen> |
+            | "(" (<sum> | <par> | <restr> | <redr>) ")"
+<P>       ::= <sum> | <par> | <restr> | <inch> | ...
+<program> ::= <const> "=" <P>
+```
+
+\normalsize
 
 # Pure CCS Ast
 
 ```scala
 enum PureCCS:
   case Constant(name: String)
-  case InputCh(c: Channel | Tau, p: PureCCS)
+  case TauCh(p: PureCCS)
+  case InputCh(c: Channel, p: PureCCS)
   case OutputCh(c: Channel, p: PureCCS)
   case Par(left: PureCCS, right: PureCCS)
   case Sum(l: List[PureCCS])
@@ -88,52 +101,29 @@ enum PureCCS:
     cs: List[(Channel, Channel)])
 ```
 
-# The compiler object
+# Compilation
 
-##  Value combinations
+## Evaluation
 
-\small
-```scala
-object PureCCSCompiler:
-  def apply(
-      program: ValueCCSProcess,
-      lowerBound: Int,
-      upperInclBound: Int
-  ): List[PureCCSProcess] =
-
-// builds all possible combinations of variables 
-// and for each one runs compiler
-// or if there are no variables in the definition 
-// of the program
-// one compilation is run.
-
-```
-\normalsize
-
-------------------
-
-## The process itself
+Arithmetic expressions:
 
 ```scala
-  private def translateProcess(
-      src: V,
-      natRange: Set[Int],
-      subst: Map[Variable, Natural]
-  ): P =
-    src match
-      case V.Constant(n, None) => //...
-      case V.Sum(l) if l.isEmpty => //...
-      case V.Par(left, right) => //...
-      case V.Restrict(p, l) => //...
-      case V.Redirection(p, cs) => //...
-      case V.IfThen(b, p) if evalB(b, subst) == true => //...
-      // ...
-
+def eval(
+  a: Aexpr, 
+  subst: Map[Variable, Natural]): Natural
 ```
 
----------------
+Boolean expressions:
 
-## The `Natural` type
+```scala
+def eval(
+  a: Bexpr, 
+  subst: Map[Variable, Natural]): Boolean
+```
+
+-----------
+
+### The `Natural` type
 
 ```scala
 opaque type Natural = Int
@@ -149,23 +139,58 @@ extension (x: Natural)
   // ...
 ```
 
-----------------
+------------------
 
-## Evaluation
+## The compiler object
 
-Arithmetic expressions:
+\small
+```scala
+object PureCCSCompiler:
+  def apply(
+      program: ValueCCSProcess,
+      lowerBound: Int,
+      upperInclBound: Int
+  ): List[PureCCSProcess] =
 
-```def eval(a: Aexpr, subst: Map[Variable, Natural]): Natural```
+    // builds all possible combinations of 
+    // variables for each one runs compiler or
+    // if there aren't any run compiler once.
 
-Boolean expressions:
+```
+\normalsize
 
-```def eval(a: Bexpr, subst: Map[Variable, Natural]): Boolean```
+------------------
 
+## The compilation function
+
+```scala
+  private def translateProcess(
+      src: V,
+      natRange: Set[Int],
+      subst: Map[Variable, Natural]
+  ): P =
+    src match
+      case V.Constant(n, None) => //...
+      case V.Sum(l) if l.isEmpty => //...
+      case V.Par(left, right) => //...
+      case V.Restrict(p, l) => //...
+      case V.Redirection(p, cs) => //...
+      case V.IfThen(b, p) 
+        if evalB(b, subst) == true => //...
+      // ...
+
+```
 
 # A few examples
 
- - Peterson: `K(x) = 'kr(x).K(x) + kw(y).K(y)`
- - Counter: `C(x) = inc.C(x + 1) + if x > 0 then dec.C(x - 1)`
+ - Peterson:\
+
+`K(x) = 'kr(x).K(x) + kw(y).K(y)`
+
+ - Counter:\
+
+`C(x) = inc.C(x + 1) + if x > 0 then dec.C(x - 1)`
+
  - (very) Hungry philosophers: 
     
 ```

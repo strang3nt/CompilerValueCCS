@@ -9,6 +9,7 @@ enum PureCCS:
       case Constant(name)      => name
       case InputCh(c, p)       => c.toString ++ " . " ++ p.toString
       case OutputCh(c, p)      => c.toString ++ " . " ++ p.toString
+      case TauCh(p)            => "tau" ++ " . " ++ p.toString
       case Par(left, right)    => left.toString ++ " | " ++ right.toString
       case Sum(l) if l.isEmpty => "0"
       case Sum(l)              => l.mkString(" + ")
@@ -22,7 +23,8 @@ enum PureCCS:
     }
 
   case Constant(name: String)
-  case InputCh(c: Channel | Tau, p: PureCCS)
+  case TauCh(p: PureCCS)
+  case InputCh(c: Channel, p: PureCCS)
   case OutputCh(c: Channel, p: PureCCS)
   case Par(left: PureCCS, right: PureCCS)
   case Sum(l: List[PureCCS])

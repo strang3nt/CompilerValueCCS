@@ -64,7 +64,7 @@ class ValueCCSParserSuite extends munit.FunSuite {
     } yield ast
     assertEquals(
       ast.getOrElse("Error"),
-      TauCh(Tau(), None, Constant("K", None))
+      TauCh(Constant("K", None))
     )
   }
 
