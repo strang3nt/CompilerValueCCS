@@ -5,6 +5,7 @@
 # Value Passing CCS Ast
 
 \small
+
 ```scala
 enum ValueCCS:
   case Constant(name: String, l: Option[List[Aexpr]])
@@ -17,6 +18,7 @@ enum ValueCCS:
   case Restrict(p: ValueCCS, l: List[Channel])
   case Redirection(p: ValueCCS, cs: List[(Channel, Channel)])
 ```
+
 \normalsize
 
 # Value Passing CCS Grammar
@@ -33,6 +35,7 @@ P, Q ::= $\sum_{i\in I}P$ \
 | $'a(e).P$ \
 | $\tau.P$ \
 \
+
 The parser handles things slightly differently
 
 # The parser

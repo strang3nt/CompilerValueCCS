@@ -33,5 +33,5 @@ object CompilerValueCCS extends ScalaModule with ScalafmtModule with ScalafixMod
   object test extends Tests {
     def ivyDeps = Agg(ivy"org.scalameta::munit:0.7.29")
     def testFramework = "munit.Framework"
-  } 
+  }
 }
