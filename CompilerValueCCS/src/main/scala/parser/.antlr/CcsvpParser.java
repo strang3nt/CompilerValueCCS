@@ -945,10 +945,7 @@ public class CcsvpParser extends Parser {
 		public CcsvpContext ccsvp() {
 			return getRuleContext(CcsvpContext.class,0);
 		}
-		public List<TerminalNode> SQUARED_LBRACKET() { return getTokens(CcsvpParser.SQUARED_LBRACKET); }
-		public TerminalNode SQUARED_LBRACKET(int i) {
-			return getToken(CcsvpParser.SQUARED_LBRACKET, i);
-		}
+		public TerminalNode SQUARED_LBRACKET() { return getToken(CcsvpParser.SQUARED_LBRACKET, 0); }
 		public List<TerminalNode> IDENTIFIER() { return getTokens(CcsvpParser.IDENTIFIER); }
 		public TerminalNode IDENTIFIER(int i) {
 			return getToken(CcsvpParser.IDENTIFIER, i);
@@ -957,6 +954,7 @@ public class CcsvpParser extends Parser {
 		public TerminalNode DIV(int i) {
 			return getToken(CcsvpParser.DIV, i);
 		}
+		public TerminalNode SQUARED_RBRACKET() { return getToken(CcsvpParser.SQUARED_RBRACKET, 0); }
 		public List<TerminalNode> COMMA() { return getTokens(CcsvpParser.COMMA); }
 		public TerminalNode COMMA(int i) {
 			return getToken(CcsvpParser.COMMA, i);
@@ -1337,7 +1335,7 @@ public class CcsvpParser extends Parser {
 							_la = _input.LA(1);
 						}
 						setState(173);
-						match(SQUARED_LBRACKET);
+						match(SQUARED_RBRACKET);
 						}
 						break;
 					case 4:
@@ -1570,7 +1568,7 @@ public class CcsvpParser extends Parser {
 		"\u00a4\u0001\u0000\u0000\u0000\u00a9\u00ac\u0001\u0000\u0000\u0000\u00aa"+
 		"\u00a8\u0001\u0000\u0000\u0000\u00aa\u00ab\u0001\u0000\u0000\u0000\u00ab"+
 		"\u00ad\u0001\u0000\u0000\u0000\u00ac\u00aa\u0001\u0000\u0000\u0000\u00ad"+
-		"\u00b6\u0005\n\u0000\u0000\u00ae\u00b1\n\u0003\u0000\u0000\u00af\u00b0"+
+		"\u00b6\u0005\u000b\u0000\u0000\u00ae\u00b1\n\u0003\u0000\u0000\u00af\u00b0"+
 		"\u0005\f\u0000\u0000\u00b0\u00b2\u0003\u0016\u000b\u0000\u00b1\u00af\u0001"+
 		"\u0000\u0000\u0000\u00b2\u00b3\u0001\u0000\u0000\u0000\u00b3\u00b1\u0001"+
 		"\u0000\u0000\u0000\u00b3\u00b4\u0001\u0000\u0000\u0000\u00b4\u00b6\u0001"+

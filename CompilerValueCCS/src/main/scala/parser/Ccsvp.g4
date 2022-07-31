@@ -51,10 +51,11 @@ exprbinop: expr boolop expr;
 // ccs value passing
 constant: IDENTIFIER (LBRACKET IDENTIFIER (COMMA IDENTIFIER)* RBRACKET)? ;
 
-ccsvp: IDENTIFIER (LBRACKET expr (COMMA expr)* RBRACKET)?                                              # Const
+ccsvp: 
+IDENTIFIER (LBRACKET expr (COMMA expr)* RBRACKET)?                                                     # Const
 | IF LBRACKET boolbinop RBRACKET THEN ccsvp                                                            # Ifthen
 | ccsvp RESTR CURLY_LBRACKET IDENTIFIER (COMMA IDENTIFIER)* CURLY_RBRACKET                             # Restriction
-| ccsvp SQUARED_LBRACKET IDENTIFIER DIV IDENTIFIER (COMMA IDENTIFIER DIV IDENTIFIER)* SQUARED_LBRACKET # Redirection
+| ccsvp SQUARED_LBRACKET IDENTIFIER DIV IDENTIFIER (COMMA IDENTIFIER DIV IDENTIFIER)* SQUARED_RBRACKET # Redirection
 | IDENTIFIER (LBRACKET IDENTIFIER RBRACKET)? SEPARATOR ccsvp                                           # Inputch
 | OUT IDENTIFIER (LBRACKET expr RBRACKET)? SEPARATOR ccsvp                                             # Outputch
 | TAU SEPARATOR ccsvp                                                                                  # Tauch

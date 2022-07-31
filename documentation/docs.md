@@ -4,21 +4,20 @@
 
 # Value Passing CCS Ast
 
-\small
-
+\scriptsize
 ```scala
-enum ValueCCS:
-  case Constant(name: String, l: Option[List[Aexpr]])
-  case TauCh(p: ValueCCS)
-  case InputCh(c: Channel, v: Option[Variable], p: ValueCCS)
-  case OutputCh(c: Channel, e: Option[Aexpr], p: ValueCCS)
-  case IfThen(b: Bexpr, p: ValueCCS)
-  case Par(left: ValueCCS, right: ValueCCS)
-  case Sum(l: List[ValueCCS])
-  case Restrict(p: ValueCCS, l: List[Channel])
-  case Redirection(p: ValueCCS, cs: List[(Channel, Channel)])
-```
+trait ValueCCS
 
+case class Const(name: String, l: Option[List[Aexpr]]) extends ValueCCS
+case class TauCh(p: ValueCCS) extends ValueCCS
+case class InputCh(c: Channel, v: Option[Variable], p: ValueCCS) extends ValueCCS
+case class OutputCh(c: Channel, e: Option[Aexpr], p: ValueCCS) extends ValueCCS
+case class IfThen(b: Bexpr, p: ValueCCS) extends ValueCCS
+case class Par(left: ValueCCS, right: ValueCCS) extends ValueCCS
+case class Sum(l: List[ValueCCS]) extends ValueCCS
+case class Restrict(p: ValueCCS, l: List[Channel]) extends ValueCCS
+case class Redirection(p: ValueCCS, cs: List[(Channel, Channel)]) extends ValueCCS
+```
 \normalsize
 
 # Value Passing CCS Grammar
@@ -40,50 +39,68 @@ The parser handles things slightly differently
 
 # The parser
 
-Packrat Parsers:
+Antlr4:
 
-  - needed left recursion
-  - a DSL tightly integrated with Scala.
+ - maintainable grammar
+ - support for direct left recursion
+ - easy implementation
+ - (simpler than Parser Combinators!).
 
 # The _actual_ grammar
 
-```xml
-<id>     ::= [a-zA-Z][a-zA-Z0-9_]
-<Id>     ::= [a-z][a-zA-Z0-9_]
-<number> ::= [1-9]\d*
-```
+## Boolean and Arithmetic expr grammar
 
 Boolean and arithmetic expressions grammar avoid left recursion:
 
-```xml
-<expr>      ::= <term> [("+" | "-") <term> ]*
-<term>      ::= <factor> [("*" | "/") <factor>]*
-<factor>    ::= "(" <expr> ")" | <id> | <number>
+\footnotesize
+```antlr4
+// arithmetic expression
+summation: SUM | SUB;
+product: MUL | DIV;
+expr: term (summation term)*;
+term: factor (product factor)*;
+factor: LBRACKET expr RBRACKET | IDENTIFIER | INTEGER;
 
-<boolbinop> ::= <term> ("&&" | "||") <term>]*
-<term>      ::= "!" <boolbinop> | <exprbinop> 
-              | "(" <boolbinop> ")"
-<exprbinop> ::= <expr> ("<" | ">" | ...) <expr>
+// boolean expression
+logicop: AND | OR;
+boolop: LE | GE | GEQ | LEQ | EQUALS;
+boolbinop: bterm (logicop bterm)*;
+bterm: NOT boolbinop | exprbinop | LBRACKET boolbinop RBRACKET;
+exprbinop: expr boolop expr;
 ```
+\normalsize
 
 ---------------
 
-\small
-```xml
-<const>  ::= <Id>( <expr>* ) | <Id>
-<inch>   ::= <id> "(" <id> ")" "." <P> | <id> "." <Ppar>
-<outch>  ::= "'" <id> "(" <expr> ")" "." <Ppar>
-<tauch>  ::= "tau" "." <Ppar>
-<ifthen> ::= "if" "(" <boolbinop> ")" "then" <PPar>
-<sum>    ::= ( <par> | <rest> | <inch> | ... ) ("+" <P>)+
-<par>    ::= (<sum> | <restr> | <inch> | ... ) "|" <P>
-<restr>  ::= <Ppar> "{" ( <id>* ) "}"
-<redr>   ::= <Ppar> "[" (<id> "/" <id>)* "]"
+## CCS value passing grammar
 
-<Ppar>    ::= <outch> | <const> | <tauch> | <inch> | <ifthen> |
-            | "(" (<sum> | <par> | <restr> | <redr>) ")"
-<P>       ::= <sum> | <par> | <restr> | <inch> | ...
-<program> ::= <const> "=" <P>
+\scriptsize
+```antlr4
+constant: IDENTIFIER (LBRACKET IDENTIFIER (COMMA IDENTIFIER)* RBRACKET)? ;
+ccsvp: 
+// const
+IDENTIFIER (LBRACKET expr (COMMA expr)* RBRACKET)?
+// ifthen
+| IF LBRACKET boolbinop RBRACKET THEN ccsvp
+// restriction
+| ccsvp RESTR CURLY_LBRACKET IDENTIFIER (COMMA IDENTIFIER)* CURLY_RBRACKET
+// redirection
+| ccsvp SQUARED_LBRACKET IDENTIFIER DIV IDENTIFIER 
+            (COMMA IDENTIFIER DIV IDENTIFIER)* SQUARED_LBRACKET
+//inputch
+| IDENTIFIER (LBRACKET IDENTIFIER RBRACKET)? SEPARATOR ccsvp
+//outputch
+| OUT IDENTIFIER (LBRACKET expr RBRACKET)? SEPARATOR ccsvp
+// tauch
+| TAU SEPARATOR ccsvp
+// sum
+| ccsvp (SUM ccsvp)+
+// par
+| ccsvp PAR ccsvp
+// parenthesis
+| LBRACKET ccsvp RBRACKET
+;
+program: constant DEFINE ccsvp;
 ```
 
 \normalsize
