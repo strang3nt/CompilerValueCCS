@@ -14,10 +14,7 @@ object CompilerValueCCS extends ScalaModule with ScalafmtModule with ScalafixMod
     )
   }
 
-  val javaFXVersion  = "18.0.1"
-  val scalaFXVersion = "18.0.1-R27"
-  val javaFXModules  = List("base", "controls", "fxml", "graphics", "media", "swing", "web")
-    .map(m => ivy"org.openjfx:javafx-$m:$javaFXVersion")
+  val scalaFXVersion = "18.0.2-R29"
 
   def scalacOptions = Seq(
       "-deprecation",
@@ -26,9 +23,8 @@ object CompilerValueCCS extends ScalaModule with ScalafmtModule with ScalafixMod
 
   def ivyDeps = Agg(
       ivy"org.scalafx::scalafx:$scalaFXVersion",
-      ivy"org.scala-lang.modules::scala-parser-combinators:2.1.1"
-
-  ) ++ javaFXModules
+      ivy"org.antlr:antlr4-runtime:4.10.1",
+  )
 
   object test extends Tests {
     def ivyDeps = Agg(ivy"org.scalameta::munit:0.7.29")

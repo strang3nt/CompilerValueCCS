@@ -4,11 +4,9 @@ import main.scala.ast.Aexpr._
 import main.scala.ast.CommonAst._
 import main.scala.eval.{ApplyOperator, ApplyUnaryOperator}
 
-import scala.util.parsing.input.Positional
-
 object Bexpr:
 
-  enum UnLogicOperator extends ApplyUnaryOperator[Boolean, Boolean], Positional:
+  enum UnLogicOperator extends ApplyUnaryOperator[Boolean, Boolean], ValueCCS:
     override def toString: String =
       this match {
         case _ => "!"
@@ -19,7 +17,7 @@ object Bexpr:
       }
     case Neq
 
-  enum LogicOperator extends ApplyOperator[Boolean, Boolean], Positional:
+  enum LogicOperator extends ApplyOperator[Boolean, Boolean], ValueCCS:
     override def toString: String =
       this match {
         case Land => "&&"
@@ -33,7 +31,7 @@ object Bexpr:
     case Land
     case Lor
 
-  enum BoolOperator extends ApplyOperator[Natural, Boolean], Positional:
+  enum BoolOperator extends ApplyOperator[Natural, Boolean], ValueCCS:
     override def toString: String =
       this match
         case Leq => "<="
@@ -56,7 +54,7 @@ object Bexpr:
     case Ge
     case Eq
 
-  sealed trait Bexpr extends Positional:
+  sealed trait Bexpr extends ValueCCS:
 
     def containsVariable: Boolean =
       this match

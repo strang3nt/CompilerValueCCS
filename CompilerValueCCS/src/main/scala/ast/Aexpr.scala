@@ -3,27 +3,29 @@ package main.scala.ast
 import main.scala.ast.CommonAst.Variable
 import main.scala.eval.ApplyOperator
 
-import scala.util.parsing.input.Positional
-
 object Aexpr:
 
-  sealed trait ExprOperator extends ApplyOperator[Natural, Natural]:
+  sealed trait ExprOperator extends ApplyOperator[Natural, Natural], ValueCCS:
     override def applyOperator(x: Natural, y: Natural): Natural =
       this match
         case Add => x + y
         case Sub => x - y
         case Mul => x * y
         case Div => x / y
-  case object Add extends ExprOperator:
+
+  sealed trait Summation extends ExprOperator
+  case object Add extends Summation:
     override def toString: String = " + "
-  case object Sub extends ExprOperator:
+  case object Sub extends Summation:
     override def toString: String = " - "
-  case object Mul extends ExprOperator:
+
+  sealed trait Product extends ExprOperator
+  case object Mul extends Product:
     override def toString: String = " * "
-  case object Div extends ExprOperator:
+  case object Div extends Product:
     override def toString: String = " \\ "
 
-  sealed trait Aexpr extends Positional:
+  sealed trait Aexpr extends ValueCCS:
 
     def containsVariable: Boolean =
       this match
@@ -36,8 +38,7 @@ object Aexpr:
         case Factor.ID(_) => true
         case _            => false
 
-  final case class Expr(t: Term, ts: List[(Add.type | Sub.type, Term)])
-      extends Aexpr:
+  final case class Expr(t: Term, ts: List[(Summation, Term)]) extends Aexpr:
 
     override def toString: String =
       if this.ts.isEmpty then this.t.toString
@@ -46,8 +47,7 @@ object Aexpr:
           .map((o, t) => o.toString + t.toString)
           .mkString
 
-  final case class Term(f: Factor, fs: List[(Mul.type | Div.type, Factor)])
-      extends Aexpr:
+  final case class Term(f: Factor, fs: List[(Product, Factor)]) extends Aexpr:
 
     override def toString: String =
       if this.fs.isEmpty then this.f.toString

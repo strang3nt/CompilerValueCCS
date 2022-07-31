@@ -1,12 +1,11 @@
-package main.scala.process
+package main.scala.ast
 
 import main.scala.ast.CommonAst.Variable
-import main.scala.ast.ValueCCS
 
-import scala.util.parsing.input.Positional
+trait ValueCCS
 
 final case class Constant(name: String, l: Option[List[Variable]])
-    extends Positional:
+    extends ValueCCS:
   override def toString: String =
     val vs =
       l match
@@ -14,7 +13,7 @@ final case class Constant(name: String, l: Option[List[Variable]])
         case None     => ""
     name + vs
 
-final case class ValueCCSProcess(name: Constant, process: ValueCCS)
-    extends Positional:
+final case class ValueCCSProgram(name: Constant, process: ValueCCS)
+    extends ValueCCS:
   override def toString: String =
     name.toString ++ " = " ++ process.toString
