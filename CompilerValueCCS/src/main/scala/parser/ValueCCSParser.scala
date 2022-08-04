@@ -13,14 +13,11 @@ import main.scala.ast.Bexpr.UnLogicOperator._
 import main.scala.ast.CommonAst._
 
 import scala.jdk.CollectionConverters._
-import main.scala.parser.CcsvpParser.SummationContext
-import main.scala.parser.CcsvpParser.ProductContext
-import main.scala.parser.CcsvpParser.LogicopContext
-import main.scala.parser.CcsvpParser.BoolopContext
+import main.scala.parser.CcsvpParser._
 
 object ValueCCSParser extends CcsvpBaseVisitor[ValueCCS]:
 
-  override def visitExpr(ctx: CcsvpParser.ExprContext): Expr =
+  override def visitExpr(ctx: ExprContext): Expr =
     Expr(
       visitTerm(ctx.term(0)),
       ctx.summation.asScala
@@ -29,7 +26,7 @@ object ValueCCSParser extends CcsvpBaseVisitor[ValueCCS]:
         .toList
     )
 
-  override def visitTerm(ctx: CcsvpParser.TermContext): Term =
+  override def visitTerm(ctx: TermContext): Term =
     Term(
       visitFactor(ctx.factor(0)),
       ctx.product.asScala
@@ -38,23 +35,23 @@ object ValueCCSParser extends CcsvpBaseVisitor[ValueCCS]:
         .toList
     )
 
-  override def visitFactor(ctx: CcsvpParser.FactorContext): Factor =
+  override def visitFactor(ctx: FactorContext): Factor =
     if (ctx.expr != null) then Parenthesis(visitExpr(ctx.expr))
     else if (ctx.IDENTIFIER != null) then ID(Variable(ctx.IDENTIFIER.getText))
     else // number
       NUMBER(Natural(Integer.parseInt(ctx.INTEGER.getText)))
 
-  override def visitSummation(x: SummationContext): Summation =
-    x.getText match
+  override def visitSummation(ctx: SummationContext): Summation =
+    ctx.getText match
       case "+" => Add
       case "-" => Sub
 
-  override def visitProduct(x: ProductContext): Product =
-    x.getText match
+  override def visitProduct(ctx: ProductContext): Product =
+    ctx.getText match
       case "*"  => Mul
       case "\\" => Div
 
-  override def visitBoolbinop(ctx: CcsvpParser.BoolbinopContext): BoolBinOp =
+  override def visitBoolbinop(ctx: BoolbinopContext): BoolBinOp =
     BoolBinOp(
       visitBterm(ctx.bterm(0)),
       ctx.logicop.asScala
@@ -63,33 +60,33 @@ object ValueCCSParser extends CcsvpBaseVisitor[ValueCCS]:
         .toList
     )
 
-  override def visitBterm(ctx: CcsvpParser.BtermContext): BoolTerm =
+  override def visitBterm(ctx: BtermContext): BoolTerm =
     if (ctx.NOT != null) then UnOp(Neq, visitBoolbinop(ctx.boolbinop))
     else if (ctx.exprbinop != null) then BoolExpr(visitExprbinop(ctx.exprbinop))
     else // lbracket boolbinop rbracket
       ParBoolOp(visitBoolbinop(ctx.boolbinop))
 
-  override def visitExprbinop(ctx: CcsvpParser.ExprbinopContext): ExprBinOp =
+  override def visitExprbinop(ctx: ExprbinopContext): ExprBinOp =
     ExprBinOp(
       visitExpr(ctx.expr(0)),
       visitBoolop(ctx.boolop),
       visitExpr(ctx.expr(1))
     )
 
-  override def visitLogicop(x: LogicopContext): LogicOperator =
-    x.getText match
+  override def visitLogicop(ctx: LogicopContext): LogicOperator =
+    ctx.getText match
       case "&&" => Land
       case "||" => Lor
 
-  override def visitBoolop(x: BoolopContext): BoolOperator =
-    x.getText match
+  override def visitBoolop(ctx: BoolopContext): BoolOperator =
+    ctx.getText match
       case "<=" => Leq
       case "<"  => Le
       case ">=" => Geq
       case ">"  => Ge
       case "==" => Eq
 
-  override def visitConstant(ctx: CcsvpParser.ConstantContext): Constant =
+  override def visitConstant(ctx: ConstantContext): Constant =
     Constant(
       ctx.IDENTIFIER(0).getText,
       if (ctx.IDENTIFIER.size > 1) then
@@ -97,19 +94,19 @@ object ValueCCSParser extends CcsvpBaseVisitor[ValueCCS]:
       else None
     )
 
-  override def visitTauch(ctx: CcsvpParser.TauchContext): ValueCCS =
+  override def visitTauch(ctx: TauchContext): ValueCCS =
     TauCh(visit(ctx.ccsvp))
 
-  override def visitPar(ctx: CcsvpParser.ParContext): ValueCCS =
+  override def visitPar(ctx: ParContext): ValueCCS =
     Par(visit(ctx.ccsvp(0)), visit(ctx.ccsvp(1)))
 
-  override def visitRestriction(ctx: CcsvpParser.RestrictionContext): ValueCCS =
+  override def visitRestriction(ctx: RestrictionContext): ValueCCS =
     Restrict(
       visit(ctx.ccsvp),
       ctx.IDENTIFIER.asScala.map(x => Channel(x.getText)).toList
     )
 
-  override def visitInputch(ctx: CcsvpParser.InputchContext): ValueCCS =
+  override def visitInputch(ctx: InputchContext): ValueCCS =
     InputCh(
       Channel(ctx.IDENTIFIER(0).getText),
       if (ctx.IDENTIFIER.size > 1) then
@@ -118,10 +115,10 @@ object ValueCCSParser extends CcsvpBaseVisitor[ValueCCS]:
       visit(ctx.ccsvp)
     )
 
-  override def visitParenthesis(ctx: CcsvpParser.ParenthesisContext): ValueCCS =
+  override def visitParenthesis(ctx: ParenthesisContext): ValueCCS =
     visit(ctx.ccsvp)
 
-  override def visitRedirection(ctx: CcsvpParser.RedirectionContext): ValueCCS =
+  override def visitRedirection(ctx: RedirectionContext): ValueCCS =
     Redirection(
       visit(ctx.ccsvp),
       ctx.IDENTIFIER.asScala
@@ -134,25 +131,25 @@ object ValueCCSParser extends CcsvpBaseVisitor[ValueCCS]:
         .toList
     )
 
-  override def visitConst(ctx: CcsvpParser.ConstContext): ValueCCS =
+  override def visitConst(ctx: ConstContext): ValueCCS =
     Const(
       ctx.IDENTIFIER.getText,
       if (ctx.expr.isEmpty) then None
       else Some(ctx.expr.asScala.map(x => visitExpr(x)).toList)
     )
 
-  override def visitSum(ctx: CcsvpParser.SumContext): ValueCCS =
+  override def visitSum(ctx: SumContext): ValueCCS =
     Sum(ctx.ccsvp.asScala.map(x => visit(x)).toList)
 
-  override def visitIfthen(ctx: CcsvpParser.IfthenContext): ValueCCS =
+  override def visitIfthen(ctx: IfthenContext): ValueCCS =
     IfThen(visitBoolbinop(ctx.boolbinop), visit(ctx.ccsvp))
 
-  override def visitOutputch(ctx: CcsvpParser.OutputchContext): ValueCCS =
+  override def visitOutputch(ctx: OutputchContext): ValueCCS =
     OutputCh(
       Channel(ctx.IDENTIFIER.getText),
       if (ctx.expr.isEmpty) then None else Some(visitExpr(ctx.expr)),
       visit(ctx.ccsvp)
     )
 
-  override def visitProgram(ctx: CcsvpParser.ProgramContext): ValueCCSProgram =
+  override def visitProgram(ctx: ProgramContext): ValueCCSProgram =
     ValueCCSProgram(visitConstant(ctx.constant), visit(ctx.ccsvp))

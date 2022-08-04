@@ -4,9 +4,6 @@ import mill._, scalalib._, scalafmt._
 
 object CompilerValueCCS extends ScalaModule with ScalafmtModule with ScalafixModule {
   def scalaVersion = "3.1.3"
-  
-  def scalafmtOnCompile = true
-  def scalafixOnCompile = true
 
   def resolutionCustomizer = T.task {
     Some( (r: coursier.core.Resolution) =>
@@ -14,15 +11,13 @@ object CompilerValueCCS extends ScalaModule with ScalafmtModule with ScalafixMod
     )
   }
 
-  val scalaFXVersion = "18.0.2-R29"
-
   def scalacOptions = Seq(
       "-deprecation",
       "-feature"
   )
 
   def ivyDeps = Agg(
-      ivy"org.scalafx::scalafx:$scalaFXVersion",
+      ivy"org.scalafx::scalafx:18.0.2-R29",
       ivy"org.antlr:antlr4-runtime:4.10.1",
   )
 
