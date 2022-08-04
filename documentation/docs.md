@@ -44,66 +44,23 @@ Antlr4:
  - maintainable grammar
  - support for direct left recursion
  - easy implementation
- - (simpler than Parser Combinators!).
+ - (simpler than Scala's Parser Combinators!).
 
 # The _actual_ grammar
 
 ## Boolean and Arithmetic expr grammar
 
-Boolean and arithmetic expressions grammar avoid left recursion:
+Boolean and arithmetic expressions grammar in BNF form:
 
-\footnotesize
-```antlr4
-// arithmetic expression
-summation: SUM | SUB;
-product: MUL | DIV;
-expr: term (summation term)*;
-term: factor (product factor)*;
-factor: LBRACKET expr RBRACKET | IDENTIFIER | INTEGER;
+![Boolean expr grammar](img/bexpr_grammar.png){ width=80% }
 
-// boolean expression
-logicop: AND | OR;
-boolop: LE | GE | GEQ | LEQ | EQUALS;
-boolbinop: bterm (logicop bterm)*;
-bterm: NOT boolbinop | exprbinop | LBRACKET boolbinop RBRACKET;
-exprbinop: expr boolop expr;
-```
-\normalsize
+![Aexpr grammar](img/aexpr_grammar.png){ width=80% }
 
 ---------------
 
 ## CCS value passing grammar
 
-\scriptsize
-```antlr4
-constant: IDENTIFIER (LBRACKET IDENTIFIER (COMMA IDENTIFIER)* RBRACKET)? ;
-ccsvp: 
-// const
-IDENTIFIER (LBRACKET expr (COMMA expr)* RBRACKET)?
-// ifthen
-| IF LBRACKET boolbinop RBRACKET THEN ccsvp
-// restriction
-| ccsvp RESTR CURLY_LBRACKET IDENTIFIER (COMMA IDENTIFIER)* CURLY_RBRACKET
-// redirection
-| ccsvp SQUARED_LBRACKET IDENTIFIER DIV IDENTIFIER 
-            (COMMA IDENTIFIER DIV IDENTIFIER)* SQUARED_LBRACKET
-//inputch
-| IDENTIFIER (LBRACKET IDENTIFIER RBRACKET)? SEPARATOR ccsvp
-//outputch
-| OUT IDENTIFIER (LBRACKET expr RBRACKET)? SEPARATOR ccsvp
-// tauch
-| TAU SEPARATOR ccsvp
-// sum
-| ccsvp (SUM ccsvp)+
-// par
-| ccsvp PAR ccsvp
-// parenthesis
-| LBRACKET ccsvp RBRACKET
-;
-program: constant DEFINE ccsvp;
-```
-
-\normalsize
+![Ccs value passing grammar](img/ccsvp_grammar.png)
 
 # Pure CCS Ast
 
